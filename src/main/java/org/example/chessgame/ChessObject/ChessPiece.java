@@ -1,17 +1,13 @@
 package org.example.chessgame.ChessObject;
 
 public abstract class ChessPiece {
-    public static enum Team {
+    public enum Team {
         WHILE, BLACK
     }
 
-    private Team team;
+    private final Team team;
 
     public ChessPiece(Team team) {
-        this.team = team;
-    }
-
-    public void setTeam(Team team) {
         this.team = team;
     }
 
@@ -19,5 +15,10 @@ public abstract class ChessPiece {
         return team;
     }
 
-    abstract boolean checkValidMove(ChessBoard chessBoard, int depX, int depY, int desX, int desY);
+    /**
+     * Check if exist chess pieces between two chess pieces.
+     * Check if path is valid.
+     * No need to check exist chess pieces in start or end position.
+     */
+    abstract boolean checkValidMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY);
 }

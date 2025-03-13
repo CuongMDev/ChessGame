@@ -6,7 +6,11 @@ public class King extends ChessPiece {
     }
 
     @Override
-    boolean checkValidMove(ChessBoard chessBoard, int depX, int depY, int desX, int desY) {
-        return false;
+    boolean checkValidMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        int dx = Math.abs(endX - startX);
+        int dy = Math.abs(endY - startY);
+
+        // The king moves only one square in any direction
+        return dx <= 1 && dy <= 1;
     }
 }

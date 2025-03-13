@@ -52,6 +52,10 @@ public class ChessBoard {
         initChessPosition();
     }
 
+    public ChessPiece.Team getChessPieceTeam(int x, int y) {
+        return chessPieceBoard[x][y].getTeam();
+    }
+
     public boolean existChessPiece(int x, int y) {
         return chessPieceBoard[x][y] != null;
     }
@@ -67,28 +71,28 @@ public class ChessBoard {
     /**
      * not check and just move chess piece
      */
-    private void moveChess(int depX, int depY, int destX, int destY) {
-        chessPieceBoard[destX][destY] = chessPieceBoard[depX][depY];
-        chessPieceBoard[depX][depY] = null;
+    private void moveChess(int startX, int startY, int endX, int endY) {
+        chessPieceBoard[endX][endY] = chessPieceBoard[startX][startY];
+        chessPieceBoard[startX][startY] = null;
     }
 
     /**
      *
      * @return true if move successfully
      */
-    public boolean moveChessPiece(int depX, int depY, int destX, int destY) {
-        if (existChessPiece(destX, destY)
-                && chessPieceBoard[depX][depY].getTeam() == chessPieceBoard[destX][destY].getTeam()) {
+    public boolean moveChessPiece(int startX, int startY, int endX, int endY) {
+        if (existChessPiece(endX, endY)
+                && chessPieceBoard[startX][startY].getTeam() == chessPieceBoard[endX][endY].getTeam()) {
             return false;
         }
-        if (chessPieceBoard[depX][depY].checkValidMove(this, depX, depY, destX, destY)) {
-            //Check if depChess kill destChess
-            if (existChessPiece(destX, destY)
-                    && chessPieceBoard[depX][depY].getTeam() != chessPieceBoard[destX][destY].getTeam()) {
-                removeChessPiece(destX, destY);
+        if (chessPieceBoard[startX][startY].checkValidMove(this, startX, startY, endX, endY)) {
+            //Check if startChess kill endChess
+            if (existChessPiece(endX, endY)
+                    && chessPieceBoard[startX][startY].getTeam() != chessPieceBoard[endX][endY].getTeam()) {
+                removeChessPiece(endX, endY);
             }
 
-            moveChess(depX, depY, destX, destY);
+            moveChess(startX, startY, endX, endY);
             return true;
         }
 

@@ -5,37 +5,33 @@ public class Castle extends ChessPiece {
         super(team);
     }
 
-    @Override
-    boolean checkValidMove(ChessBoard chessBoard, int depX, int depY, int desX, int desY) {
-        if (depX != desX && depY != desY) {
-            return false;
-        }
-        //Swap
-        if (depX > desX) {
-            int temp = desX;
-            desX = depX;
-            depX = temp;
-        }
-        if (depY > desY) {
-            int temp = desY;
-            desY = depY;
-            depY = temp;
-        }
+    // Check if the path between (startX, startY) and (endX, endY) is clear
+    private boolean isPathClear(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        int stepX = Integer.compare(endX, startX); // -1, 0, 1
+        int stepY = Integer.compare(endY, startY); // -1, 0, 1
 
-        if (depX == desX) {
-            for (int y = depY; y < desY; y++) {
-                if (chessBoard.existChessPiece(depX, y)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        //depY == desY
-        for (int x = depX; x < desX; x++) {
-            if (chessBoard.existChessPiece(x, depY)) {
+        int x = startX + stepX;
+        int y = startY + stepY;
+
+        while (x != endX || y != endY) {
+            if (chessBoard.existChessPiece(x, y)) {
                 return false;
             }
+            x += stepX;
+            y += stepY;
         }
+
         return true;
+    }
+
+    @Override
+    boolean checkValidMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        // The rook moves only in a straight line (either horizontally or vertically)
+        if (startX != endX && startY != endY) {
+            return false;
+        }
+
+        // Check for obstacles in the path
+        return isPathClear(chessBoard, startX, startY, endX, endY);
     }
 }

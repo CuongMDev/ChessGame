@@ -6,7 +6,11 @@ public class Knight extends ChessPiece {
     }
 
     @Override
-    boolean checkValidMove(ChessBoard chessBoard, int depX, int depY, int desX, int desY) {
-        return false;
+    boolean checkValidMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        int dx = Math.abs(endX - startX);
+        int dy = Math.abs(endY - startY);
+
+        // Quân mã chỉ di chuyển theo hình chữ "L"
+        return dx == 2 && dy == 1 || dx == 1 && dy == 2;
     }
 }
