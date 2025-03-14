@@ -3,6 +3,7 @@ package org.example.chessgame.ChessObject;
 public class Queen extends ChessPiece {
     public Queen(Team team) {
         super(team);
+        createChessImage("queen", 3);
     }
 
     // Check if the path between (startX, startY) and (endX, endY) is clear

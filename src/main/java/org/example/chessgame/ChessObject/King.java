@@ -3,6 +3,7 @@ package org.example.chessgame.ChessObject;
 public class King extends ChessPiece {
     public King(Team team) {
         super(team);
+        createChessImage("king", 2);
     }
 
     @Override

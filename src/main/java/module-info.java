@@ -6,4 +6,6 @@ module org.example.chessgame {
 
     opens org.example.chessgame to javafx.fxml;
     exports org.example.chessgame;
+    exports org.example.chessgame.GameBoard;
+    opens org.example.chessgame.GameBoard to javafx.fxml;
 }

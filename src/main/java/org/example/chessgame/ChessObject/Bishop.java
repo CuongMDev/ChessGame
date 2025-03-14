@@ -3,6 +3,7 @@ package org.example.chessgame.ChessObject;
 public class Bishop extends ChessPiece {
     public Bishop(Team team) {
         super(team);
+        createChessImage("bishop", 1);
     }
 
     private boolean isPathClear(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {

@@ -3,15 +3,16 @@ package org.example.chessgame.ChessObject;
 public class Pawn extends ChessPiece {
     public Pawn(Team team) {
         super(team);
+        createChessImage("pawn", 3);
     }
 
     @Override
     public boolean checkValidMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
-        int direction = (chessBoard.getChessPieceTeam(startX, startY) == getTeam()) ? -1 : 1; // White moves up (-1), Black moves down (+1)
-        int startRow = (chessBoard.getChessPieceTeam(startX, startY) == getTeam()) ? 6 : 1;   // White starts at row 6, Black at row 1
+        int direction = (chessBoard.getChessPieceTeam(startX, startY) == Team.WHILE) ? -1 : 1; // White moves up (-1), Black moves down (+1)
+        int startRow = (chessBoard.getChessPieceTeam(startX, startY) == Team.WHILE) ? 7 : 2;   // White starts at row 6, Black at row 1
 
         // Normal move: one step forward
-        if (startX == endX && endY == startY + direction) {
+        if (startX == endX && endY == startY + direction && !chessBoard.existChessPiece(startX, startY + direction)) {
             return true;
         }
 
@@ -21,7 +22,7 @@ public class Pawn extends ChessPiece {
         }
 
         // Capturing move: diagonal move
-        if (Math.abs(startX - endX) == 1 && startY == endY + direction) {
+        if (Math.abs(startX - endX) == 1 && startY + direction == endY) {
             return chessBoard.existChessPiece(endX, endY) && chessBoard.getChessPieceTeam(endX, endY) != getTeam(); // Must capture opponent's piece
         }
 
