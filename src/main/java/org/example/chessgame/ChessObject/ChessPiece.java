@@ -2,27 +2,27 @@ package org.example.chessgame.ChessObject;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
 
 import java.util.Objects;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class ChessPiece {
     public enum Team {
-        WHILE, BLACK
+        WHITE, BLACK
     }
 
     private final Team team;
     private final Random randSkin = new Random();
     private static final String[] teamString = {"white", "black"};
-    private static final String chessImageBoard = "images/";
+    private static final String chessImagePath = "images/";
 
     ImageView chessImage;
 
-    protected void createChessImage(String imageName, int skinCount) {
-        int skinType = randSkin.nextInt(skinCount);
-        String path = String.format("%s%s-%s_%d.png", chessImageBoard, teamString[getTeam().ordinal()], imageName, skinType);
+    abstract int getSkinCount();
+
+    protected void createChessImage(String imageName) {
+        int skinType = randSkin.nextInt(getSkinCount());
+        String path = String.format("%s%s-%s_%d.png", chessImagePath, teamString[getTeam().ordinal()], imageName, skinType);
 
         Image image = new Image(Objects.requireNonNull(getClass().getResourceAsStream(path))); // Đường dẫn ảnh
         chessImage = new ImageView(image);

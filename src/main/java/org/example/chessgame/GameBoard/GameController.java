@@ -98,7 +98,7 @@ public class GameController extends Controller {
 
     void changeTurn() {
         if (playerTurn == ChessPiece.Team.BLACK) {
-            playerTurn = ChessPiece.Team.WHILE;
+            playerTurn = ChessPiece.Team.WHITE;
         } else {
             playerTurn = ChessPiece.Team.BLACK;
         }
@@ -226,7 +226,7 @@ public class GameController extends Controller {
     }
 
     private void initGameplay() {
-        playerTurn = ChessPiece.Team.WHILE;
+        playerTurn = ChessPiece.Team.WHITE;
     }
 
     private void addNumOrder() {
@@ -247,8 +247,8 @@ public class GameController extends Controller {
         }
 
         for (int col = 1; col <= 8; col++) {
-            Label numLabel1 = new Label((col - 1) + " ");
-            Label numLabel2 = new Label(" " + (col - 1));
+            Label numLabel1 = new Label((9 - col) + " ");
+            Label numLabel2 = new Label(" " + (9 - col));
             numLabel1.setStyle(numLabelStyle);
             numLabel2.setStyle(numLabelStyle);
             HBox vbox1 = new HBox(numLabel1);

@@ -3,13 +3,17 @@ package org.example.chessgame.ChessObject;
 public class Pawn extends ChessPiece {
     public Pawn(Team team) {
         super(team);
-        createChessImage("pawn", 3);
+        createChessImage("pawn");
+    }
+
+    public int getSkinCount() {
+        return 3;
     }
 
     @Override
     public boolean checkValidMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
-        int direction = (chessBoard.getChessPieceTeam(startX, startY) == Team.WHILE) ? -1 : 1; // White moves up (-1), Black moves down (+1)
-        int startRow = (chessBoard.getChessPieceTeam(startX, startY) == Team.WHILE) ? 7 : 2;   // White starts at row 6, Black at row 1
+        int direction = (chessBoard.getChessPieceTeam(startX, startY) == Team.WHITE) ? -1 : 1; // White moves up (-1), Black moves down (+1)
+        int startRow = (chessBoard.getChessPieceTeam(startX, startY) == Team.WHITE) ? 7 : 2;   // White starts at row 6, Black at row 1
 
         // Normal move: one step forward
         if (startX == endX && endY == startY + direction && !chessBoard.existChessPiece(startX, startY + direction)) {

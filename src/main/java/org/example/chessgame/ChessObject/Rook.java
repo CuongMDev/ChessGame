@@ -3,7 +3,11 @@ package org.example.chessgame.ChessObject;
 public class Rook extends ChessPiece {
     public Rook(Team team) {
         super(team);
-        createChessImage("rook", 1);
+        createChessImage("rook");
+    }
+
+    public int getSkinCount() {
+        return 1;
     }
 
     // Check if the path between (startX, startY) and (endX, endY) is clear

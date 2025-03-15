@@ -17,37 +17,37 @@ public class ChessBoard {
 
         // Pawn
         for (int x = 1; x <= 8; x++) {
-            chessPieceBoard[x][7] = new Pawn(ChessPiece.Team.WHILE);
+            chessPieceBoard[x][7] = new Pawn(ChessPiece.Team.WHITE);
             chessPieceBoard[x][2] = new Pawn(ChessPiece.Team.BLACK);
         }
 
         // Castle
-        chessPieceBoard[1][8] = new Rook(ChessPiece.Team.WHILE);
-        chessPieceBoard[8][8] = new Rook(ChessPiece.Team.WHILE);
+        chessPieceBoard[1][8] = new Rook(ChessPiece.Team.WHITE);
+        chessPieceBoard[8][8] = new Rook(ChessPiece.Team.WHITE);
 
         chessPieceBoard[1][1] = new Rook(ChessPiece.Team.BLACK);
         chessPieceBoard[8][1] = new Rook(ChessPiece.Team.BLACK);
 
         // Knight
-        chessPieceBoard[2][8] = new Knight(ChessPiece.Team.WHILE);
-        chessPieceBoard[7][8] = new Knight(ChessPiece.Team.WHILE);
+        chessPieceBoard[2][8] = new Knight(ChessPiece.Team.WHITE);
+        chessPieceBoard[7][8] = new Knight(ChessPiece.Team.WHITE);
 
         chessPieceBoard[2][1] = new Knight(ChessPiece.Team.BLACK);
         chessPieceBoard[7][1] = new Knight(ChessPiece.Team.BLACK);
 
         // Bishop
-        chessPieceBoard[3][8] = new Bishop(ChessPiece.Team.WHILE);
-        chessPieceBoard[6][8] = new Bishop(ChessPiece.Team.WHILE);
+        chessPieceBoard[3][8] = new Bishop(ChessPiece.Team.WHITE);
+        chessPieceBoard[6][8] = new Bishop(ChessPiece.Team.WHITE);
 
         chessPieceBoard[3][1] = new Bishop(ChessPiece.Team.BLACK);
         chessPieceBoard[6][1] = new Bishop(ChessPiece.Team.BLACK);
 
         // Queen
-        chessPieceBoard[4][8] = new Queen(ChessPiece.Team.WHILE);
+        chessPieceBoard[4][8] = new Queen(ChessPiece.Team.WHITE);
         chessPieceBoard[4][1] = new Queen(ChessPiece.Team.BLACK);
 
         // King
-        chessPieceBoard[5][8] = new King(ChessPiece.Team.WHILE);
+        chessPieceBoard[5][8] = new King(ChessPiece.Team.WHITE);
         chessPieceBoard[5][1] = new King(ChessPiece.Team.BLACK);
     }
 
