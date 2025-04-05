@@ -12,6 +12,7 @@ import javafx.scene.layout.*;
 import org.example.chessgame.Abstract.Controller;
 import org.example.chessgame.ChessObject.ChessBoard;
 import org.example.chessgame.ChessObject.ChessPiece;
+import org.example.chessgame.ChessObject.Move;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -75,21 +76,35 @@ public class GameController extends Controller {
         return chessBoard.getChessPieceTeam(cell[0], cell[1]) == playerTurn;
     }
 
+    private void moveChessPane(int startX, int startY, int endX, int endY) {
+        Pane startPane = getPaneFromGridPane(startX, startY);
+        if (endX == 0 && endY == 0) {
+            startPane.getChildren().removeLast();
+            return;
+        }
+
+        Pane endPane = getPaneFromGridPane(endX, endY);
+
+        Node chessImage = startPane.getChildren().removeLast();
+        endPane.getChildren().setAll(chessImage);
+    }
+
     private void handlePlayerEvent(int startX, int startY, int endX, int endY) {
         // Kiểm tra nếu 2 ô trùng nhau
         if (startX == endX && startY == endY) {
             return;
         }
 
-        Pane startPane = getPaneFromGridPane(startX, startY);
-        Pane endPane = getPaneFromGridPane(endX, endY);
-
         //check valid turn
         if (chessBoard.getChessPieceTeam(startX, startY) == playerTurn) {
             // Check valid move
             if (chessBoard.moveChessPiece(startX, startY, endX, endY)) {
-                Node chessImage = startPane.getChildren().removeLast();
-                endPane.getChildren().setAll(chessImage);
+                moveChessPane(startX, startY, endX, endY);
+
+                if (chessBoard.getLastMove(0).isSpecialMove) {
+                    Move getLast1Move = chessBoard.getLastMove(1);
+                    moveChessPane(getLast1Move.startX, getLast1Move.startY, getLast1Move.endX, getLast1Move.endY);
+                }
 
                 changeTurn();
             }

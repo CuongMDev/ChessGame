@@ -30,7 +30,7 @@ public class Queen extends ChessPiece {
     }
 
     @Override
-    boolean checkValidMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+    public boolean checkValidKill(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
         int dx = Math.abs(endX - startX);
         int dy = Math.abs(endY - startY);
 

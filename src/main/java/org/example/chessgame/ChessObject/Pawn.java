@@ -25,11 +25,41 @@ public class Pawn extends ChessPiece {
             return !chessBoard.existChessPiece(startX, startY + direction);
         }
 
-        // Capturing move: diagonal move
+
         if (Math.abs(startX - endX) == 1 && startY + direction == endY) {
-            return chessBoard.existChessPiece(endX, endY) && chessBoard.getChessPieceTeam(endX, endY) != getTeam(); // Must capture opponent's piece
+            // Capturing move: diagonal move
+            if (chessBoard.existChessPiece(endX, endY)) {
+                if (chessBoard.getChessPieceTeam(endX, endY) != getTeam()) { // Must capture opponent's piece
+                    return true;
+                }
+            } else {
+                // En Passant (bắt tốt qua đường)
+                if (chessBoard.existChessPiece(endX, endY - direction) && chessBoard.getChessPieceTeam(endX, endY - direction) != getTeam()) {
+                    // Kiểm tra nước đi của đối phương có phải là quân tốt di chuyển 2 ô từ vị trí ban đầu
+                    Move lastMove = chessBoard.getLastMove(0);
+                    if (lastMove != null && chessBoard.getChessPiece(lastMove.endX, lastMove.endY) instanceof Pawn) {
+                        // Kiểm tra nếu quân đối phương vừa di chuyển 2 ô
+                        if (Math.abs(lastMove.startY - lastMove.endY) == 2 &&
+                                lastMove.startX == endX &&
+                                chessBoard.getChessPieceTeam(lastMove.endX, lastMove.endY) != getTeam()) {
+                            return true; // Nếu thỏa mãn điều kiện en passant
+                        }
+                    }
+                }
+            }
         }
 
         return false; // Any other move is invalid
+    }
+
+    @Override
+    public boolean checkValidKill(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        int direction = (chessBoard.getChessPieceTeam(startX, startY) == Team.WHITE) ? -1 : 1; // White moves up (-1), Black moves down (+1)
+        // Capturing move: diagonal move
+        if (Math.abs(startX - endX) == 1 && startY + direction == endY) {
+            return chessBoard.getChessPieceTeam(endX, endY) != getTeam(); // Must capture opponent's piece
+        }
+
+        return false;
     }
 }
