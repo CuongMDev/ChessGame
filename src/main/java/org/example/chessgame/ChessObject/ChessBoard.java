@@ -126,18 +126,33 @@ public class ChessBoard {
         return history.get(history.size() - 1 - lastNumber);
     }
 
-    private void rollback() {
+    private Move rollbackOne() {
         if (history.isEmpty()) {
-            return;
+            return null;
         }
         Move lastMove = history.pop();
+
         getChessPiece(lastMove.endX, lastMove.endY).changeMoveNumber(-1);
         setChessPiece(lastMove.startX, lastMove.startY, getChessPiece(lastMove.endX, lastMove.endY));
         setChessPiece(lastMove.endX, lastMove.endY, lastMove.deadPiece);
 
-        if (lastMove.isSpecialMove) {
-            rollback();
+        return lastMove;
+    }
+
+    public List<Move> rollback() {
+        List<Move> moves = new ArrayList<>();
+
+        Move lastMove = rollbackOne();
+        if (lastMove == null) {
+            return null;
         }
+        moves.add(lastMove);
+
+        if (lastMove.isSpecialMove) {
+            moves.add(rollbackOne());
+        }
+
+        return moves;
     }
 
     private boolean checkKingCanMove(ChessPiece.Team team) {

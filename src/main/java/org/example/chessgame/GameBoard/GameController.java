@@ -8,12 +8,16 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import org.example.chessgame.Abstract.Controller;
 import org.example.chessgame.ChessObject.ChessBoard;
 import org.example.chessgame.ChessObject.ChessPiece;
 import org.example.chessgame.ChessObject.Move;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GameController extends Controller {
@@ -23,10 +27,29 @@ public class GameController extends Controller {
     HBox mainBox;
     @FXML
     Pane overlayPane;
-
     ChessPiece.Team playerTurn;
 
     ChessBoard chessBoard;
+
+    ImageView saveChessImage;
+
+    @FXML
+    private void onRollbackClicked(MouseEvent mouseEvent) {
+        if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+            List<Move> moveList = chessBoard.rollback();
+            if (moveList == null) {
+                return;
+            }
+
+            for (Move move : moveList) {
+                moveChessPane(move.endX, move.endY, move.startX, move.startY);
+                if (move.deadPiece != null) {
+                    getPaneFromGridPane(move.endX, move.endY).getChildren().setAll(move.deadPiece.getChessImage());
+                }
+            }
+            changeTurn();
+        }
+    }
 
     private int[] getCell(double posX, double posY) {
         Pane pane = getPaneFromGridPane(1, 1);
@@ -78,8 +101,11 @@ public class GameController extends Controller {
 
     private void moveChessPane(int startX, int startY, int endX, int endY) {
         Pane startPane = getPaneFromGridPane(startX, startY);
+        if (startX == 0 && startY == 0) {
+            startPane.getChildren().add(saveChessImage);
+        }
         if (endX == 0 && endY == 0) {
-            startPane.getChildren().removeLast();
+            saveChessImage = (ImageView) startPane.getChildren().removeLast();
             return;
         }
 
@@ -126,6 +152,9 @@ public class GameController extends Controller {
         AtomicReference<Double> startYPos = new AtomicReference<>((double) 0);
         AtomicReference<Pane> containPane = new AtomicReference<>();
         image.setOnMousePressed(event -> {
+            if (event.getButton() != MouseButton.PRIMARY) {
+                return;
+            }
             Point2D localInOverlayPane = overlayPane.sceneToLocal(event.getSceneX(), event.getSceneY());
             // Lưu điểm bắt đầu
             startXPos.set(localInOverlayPane.getX());
@@ -150,6 +179,9 @@ public class GameController extends Controller {
 
         // Sự kiện kéo thả
         image.setOnMouseDragged(event -> {
+            if (event.getButton() != MouseButton.PRIMARY) {
+                return;
+            }
             if (!checkValidTurn(startXPos.get(), startYPos.get())) {
                 return;
             }
@@ -161,6 +193,9 @@ public class GameController extends Controller {
 
         // Sự kiện thả
         image.setOnMouseReleased(event -> {
+            if (event.getButton() != MouseButton.PRIMARY) {
+                return;
+            }
             if (!checkValidTurn(startXPos.get(), startYPos.get())) {
                 return;
             }
@@ -221,6 +256,7 @@ public class GameController extends Controller {
         );
         chessBoardBox.prefHeightProperty().bind(chessBoardBox.prefWidthProperty());
 
+        chessBoardBox.add(new Pane(), 0, 0); // save pane
         // Color chess board
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
