@@ -12,9 +12,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import org.example.chessgame.Abstract.Controller;
-import org.example.chessgame.ChessObject.ChessBoard;
-import org.example.chessgame.ChessObject.ChessPiece;
-import org.example.chessgame.ChessObject.Move;
+import org.example.chessgame.ChessObject.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +31,16 @@ public class GameController extends Controller {
 
     ImageView saveChessImage;
 
+    boolean isPromotion;
+
     @FXML
     private void onRollbackClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+            if (isPromotion) {
+                refresh();
+                isPromotion = false;
+            }
+
             List<Move> moveList = chessBoard.rollback();
             if (moveList == null) {
                 return;
@@ -115,6 +120,46 @@ public class GameController extends Controller {
         endPane.getChildren().setAll(chessImage);
     }
 
+    private void createPromotionBoard(int endX, int endY) {
+        isPromotion = true;
+        ChessPiece.Team team = chessBoard.getChessPieceTeam(endX, endY); // Lấy team
+        Pane[] chessPanes = {getPaneFromGridPane(endX, endY - 1), getPaneFromGridPane(endX + 1, endY),
+                getPaneFromGridPane(endX, endY + 1), getPaneFromGridPane(endX - 1, endY)};
+        ChessPiece[] promotionPieces = {new Queen(team), new Rook(team), new Knight(team), new Bishop(team)};
+
+        // Thêm 4 quân phong
+        for (int i = 0; i < 4; i++) {
+            Pane promotionPane = new Pane();
+            promotionPane.setStyle("-fx-background-color: white;");
+            promotionPane.prefWidthProperty().bind(chessPanes[i].widthProperty());
+            promotionPane.prefHeightProperty().bind(chessPanes[i].heightProperty());
+
+            ChessPiece promotionPiece = promotionPieces[i];
+            ImageView promotionChessImage = promotionPiece.getChessImage();
+            setChessPiece(promotionPane, promotionChessImage);
+            chessPanes[i].getChildren().add(promotionPane);
+
+            // Thêm sự kiện phong
+            promotionChessImage.setOnMousePressed(event -> {
+                // Kiểm tra chuột trái
+                if (event.getButton() != MouseButton.PRIMARY) {
+                    return;
+                }
+
+                moveChessPane(endX, endY, 0, 0); // Save
+                addDragEvent(promotionChessImage);
+                getPaneFromGridPane(endX, endY).getChildren().setAll(promotionChessImage);
+                chessBoard.setPromote(endX, endY, promotionPiece);
+
+                // Bỏ phần chọn phong
+                for (Pane chessPane : chessPanes) {
+                    chessPane.getChildren().removeLast();
+                }
+                isPromotion = false;
+            });
+        }
+    }
+
     private void handlePlayerEvent(int startX, int startY, int endX, int endY) {
         // Kiểm tra nếu 2 ô trùng nhau
         if (startX == endX && startY == endY) {
@@ -126,13 +171,17 @@ public class GameController extends Controller {
             // Check valid move
             if (chessBoard.moveChessPiece(startX, startY, endX, endY)) {
                 moveChessPane(startX, startY, endX, endY);
+                changeTurn();
 
+                if (chessBoard.checkPromotion(endX, endY)) {
+                    createPromotionBoard(endX, endY);
+                }
+
+                // Đặc biệt thì di chuyển thêm lần nữa
                 if (chessBoard.getLastMove(0).isSpecialMove) {
                     Move getLast1Move = chessBoard.getLastMove(1);
                     moveChessPane(getLast1Move.startX, getLast1Move.startY, getLast1Move.endX, getLast1Move.endY);
                 }
-
-                changeTurn();
             }
         }
     }
@@ -152,7 +201,7 @@ public class GameController extends Controller {
         AtomicReference<Double> startYPos = new AtomicReference<>((double) 0);
         AtomicReference<Pane> containPane = new AtomicReference<>();
         image.setOnMousePressed(event -> {
-            if (event.getButton() != MouseButton.PRIMARY) {
+            if (event.getButton() != MouseButton.PRIMARY || isPromotion) {
                 return;
             }
             Point2D localInOverlayPane = overlayPane.sceneToLocal(event.getSceneX(), event.getSceneY());
@@ -179,7 +228,7 @@ public class GameController extends Controller {
 
         // Sự kiện kéo thả
         image.setOnMouseDragged(event -> {
-            if (event.getButton() != MouseButton.PRIMARY) {
+            if (event.getButton() != MouseButton.PRIMARY || isPromotion) {
                 return;
             }
             if (!checkValidTurn(startXPos.get(), startYPos.get())) {
@@ -193,7 +242,7 @@ public class GameController extends Controller {
 
         // Sự kiện thả
         image.setOnMouseReleased(event -> {
-            if (event.getButton() != MouseButton.PRIMARY) {
+            if (event.getButton() != MouseButton.PRIMARY || isPromotion) {
                 return;
             }
             if (!checkValidTurn(startXPos.get(), startYPos.get())) {
@@ -215,8 +264,16 @@ public class GameController extends Controller {
         });
     }
 
+    public void setChessPiece(Pane cell, ImageView chessPieceImage) {
+        chessPieceImage.fitWidthProperty().bind(cell.widthProperty());
+        chessPieceImage.fitHeightProperty().bind(cell.heightProperty());
+
+        cell.getChildren().setAll(chessPieceImage);
+    }
+
     @Override
     public void refresh() {
+        addNumOrder();
         for (Node node : chessBoardBox.getChildren()) {
             int x = GridPane.getColumnIndex(node);
             int y = GridPane.getRowIndex(node);
@@ -227,12 +284,10 @@ public class GameController extends Controller {
             Pane cell = (Pane) node;
             if (chessBoard.existChessPiece(x, y)) {
                 ImageView chessImage = chessBoard.getChessPiece(x, y).getChessImage();
-                chessImage.fitWidthProperty().bind(cell.widthProperty());
-                chessImage.fitHeightProperty().bind(cell.heightProperty());
+
+                setChessPiece(cell, chessImage);
 
                 addDragEvent(chessImage);
-
-                cell.getChildren().setAll(chessImage);
             } else {
                 cell.getChildren().clear();
             }
@@ -256,28 +311,28 @@ public class GameController extends Controller {
         );
         chessBoardBox.prefHeightProperty().bind(chessBoardBox.prefWidthProperty());
 
-        chessBoardBox.add(new Pane(), 0, 0); // save pane
         // Color chess board
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
+        for (int row = 0; row <= 9; row++) {
+            for (int col = 0; col <= 9; col++) {
                 Pane cell = new Pane(); // Create new cell
 
-                // if (row + col) even, color red
-                if ((row + col) % 2 == 0) {
-                    cell.setStyle("-fx-background-color: #a3683c;");
-                } else {
-                    cell.setStyle("-fx-background-color: #e9c7ac;");
+                if (1 <= row && row <= 8 && 1 <= col && col <= 8) {
+                    // if (row + col) even, color red
+                    if ((row + col) % 2 == 0) {
+                        cell.setStyle("-fx-background-color: #a3683c;");
+                    } else {
+                        cell.setStyle("-fx-background-color: #e9c7ac;");
+                    }
                 }
 
                 chessBoardBox.add(cell, col, row); // Add to GridPane
             }
         }
-
-        addNumOrder();
     }
 
     private void initGameplay() {
         playerTurn = ChessPiece.Team.WHITE;
+        isPromotion = false;
     }
 
     private void addNumOrder() {
@@ -293,8 +348,17 @@ public class GameController extends Controller {
             vbox1.setAlignment(Pos.BOTTOM_CENTER);
             vbox2.setAlignment(Pos.TOP_CENTER);
 
-            chessBoardBox.add(vbox1, row, 0);
-            chessBoardBox.add(vbox2, row, 9);
+            Pane pane1 = getPaneFromGridPane(row, 0);
+            Pane pane2 = getPaneFromGridPane(row, 9);
+
+            vbox1.prefHeightProperty().bind(pane1.heightProperty());
+            vbox1.prefWidthProperty().bind(pane1.widthProperty());
+
+            vbox2.prefHeightProperty().bind(pane2.heightProperty());
+            vbox2.prefWidthProperty().bind(pane2.widthProperty());
+
+            pane1.getChildren().setAll(vbox1);
+            pane2.getChildren().setAll(vbox2);
         }
 
         for (int col = 1; col <= 8; col++) {
@@ -307,8 +371,17 @@ public class GameController extends Controller {
             vbox1.setAlignment(Pos.CENTER_RIGHT);
             vbox2.setAlignment(Pos.CENTER_LEFT);
 
-            chessBoardBox.add(vbox1, 0, col);
-            chessBoardBox.add(vbox2, 9, col);
+            Pane pane1 = getPaneFromGridPane(0, col);
+            Pane pane2 = getPaneFromGridPane(9, col);
+
+            vbox1.prefHeightProperty().bind(pane1.heightProperty());
+            vbox1.prefWidthProperty().bind(pane1.widthProperty());
+
+            vbox2.prefHeightProperty().bind(pane2.heightProperty());
+            vbox2.prefWidthProperty().bind(pane2.widthProperty());
+
+            pane1.getChildren().setAll(vbox1);
+            pane2.getChildren().setAll(vbox2);
         }
     }
 

@@ -1,5 +1,8 @@
 package org.example.chessgame.ChessObject;
 
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -110,6 +113,13 @@ public class ChessBoard {
         return moves;
     }
 
+    public void setPromote(int endX, int endY, ChessPiece chessPiece) {
+        // Lưu
+        moveChess(endX, endY, 0, 0);
+        setChessPiece(endX, endY, chessPiece);
+        getLastMove(0).isSpecialMove = true;
+    }
+
     /**
      * not check and just move chess piece
      */
@@ -207,6 +217,16 @@ public class ChessBoard {
 
             rollback();
             return true;
+        }
+
+        return false;
+    }
+
+    public boolean checkPromotion(int endX, int endY) {
+        // Kiểm tra phong
+        if (getChessPiece(endX, endY) instanceof Pawn) {
+            return (getChessPieceTeam(endX, endY) == ChessPiece.Team.WHITE && endY == 1) ||
+                    (getChessPieceTeam(endX, endY) == ChessPiece.Team.BLACK && endY == 8);
         }
 
         return false;
