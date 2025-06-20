@@ -1,5 +1,4 @@
-.num_label {
-
-    -fx-pref-width: 50px; /* Chiều rộng */
-    -fx-pref-height: 50px; /* Chiều cao */
+.highlight-border {
+    -fx-border-color: white;
+    -fx-border-width: 2;
 }

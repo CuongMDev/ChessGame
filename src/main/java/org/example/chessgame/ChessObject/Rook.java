@@ -30,9 +30,18 @@ public class Rook extends ChessPiece {
     }
 
     @Override
-    public boolean checkValidKill(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+    public boolean checkCanPreMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
         // The rook moves only in a straight line (either horizontally or vertically)
         if (startX != endX && startY != endY) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean checkValidKill(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        if (!checkCanPreMove(chessBoard, startX, startY, endX, endY)) {
             return false;
         }
 

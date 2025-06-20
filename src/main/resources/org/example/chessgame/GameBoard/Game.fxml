@@ -7,8 +7,9 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 
-<HBox fx:id="mainBox" prefHeight="617.0" prefWidth="815.0" style="-fx-alignment: Center;" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.chessgame.GameBoard.GameController">
+<HBox fx:id="mainBox" prefHeight="617.0" prefWidth="815.0" style="-fx-alignment: Center;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.chessgame.GameBoard.GameController">
    <children>
       <StackPane>
          <children>
@@ -41,6 +42,16 @@
             </GridPane>
          </children>
       </StackPane>
-      <Button mnemonicParsing="false" onMouseClicked="#onRollbackClicked" text="Rollback" />
+      <VBox alignment="CENTER" prefHeight="617.0" prefWidth="179.0">
+         <children>
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <Button fx:id="rollbackButton" mnemonicParsing="false" onMouseClicked="#onRollbackClicked" text="Rollback" />
+                  <Button fx:id="drawButton" mnemonicParsing="false" onMouseClicked="#onDrawClicked" text="Draw" />
+               </children>
+            </HBox>
+            <Button mnemonicParsing="false" onMouseClicked="#onResignClicked" text="Resign" />
+         </children>
+      </VBox>
    </children>
 </HBox>

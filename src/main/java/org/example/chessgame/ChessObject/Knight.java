@@ -11,11 +11,16 @@ public class Knight extends ChessPiece {
     }
 
     @Override
-    public boolean checkValidKill(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+    public boolean checkCanPreMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
         int dx = Math.abs(endX - startX);
         int dy = Math.abs(endY - startY);
 
         // Quân mã chỉ di chuyển theo hình chữ "L"
         return dx == 2 && dy == 1 || dx == 1 && dy == 2;
+    }
+
+    @Override
+    public boolean checkValidKill(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        return checkCanPreMove(chessBoard, startX, startY, endX, endY);
     }
 }

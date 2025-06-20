@@ -30,12 +30,21 @@ public class Queen extends ChessPiece {
     }
 
     @Override
-    public boolean checkValidKill(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+    public boolean checkCanPreMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
         int dx = Math.abs(endX - startX);
         int dy = Math.abs(endY - startY);
 
         // The queen moves like a rook or a bishop
         if (!(startX == endX || startY == endY || dx == dy)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean checkValidKill(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        if (!checkCanPreMove(chessBoard, startX, startY, endX, endY)) {
             return false;
         }
 

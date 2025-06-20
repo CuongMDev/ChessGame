@@ -12,6 +12,34 @@ public class King extends ChessPiece {
     }
 
     @Override
+    public boolean checkCanPreMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        if (checkValidKill(chessBoard, startX, startY, endX, endY)) {
+            return true;
+        }
+        int rank = (getTeam() == Team.WHITE) ? 8 : 1; // Hàng của vua tùy theo màu
+        // Kiểm tra nếu đang đứng đúng vị trí vua ban đầu
+        if (startY == rank && startX == 5 && endY == rank) {
+            // Nhập thành Kingside (vua đi sang g7 -> x = 7)
+            if (endX == 7) {
+                // Kiểm tra xe đã di chuyển chưa
+                if (!chessBoard.existChessPiece(8, rank)
+                        || chessBoard.getChessPiece(8, rank).getMoveNumber() > 0) return false;
+                return true;
+            }
+
+            // Nhập thành Queenside (vua đi sang c1/c8 -> x = 3)
+            if (endX == 3) {
+                // Kiểm tra xe đã di chuyển chưa
+                if (!chessBoard.existChessPiece(1, rank)
+                        || chessBoard.getChessPiece(1, rank).getMoveNumber() > 0) return false;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
     public boolean checkValidMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
         if (checkValidKill(chessBoard, startX, startY, endX, endY)) {
             return true;

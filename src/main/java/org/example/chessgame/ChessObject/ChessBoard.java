@@ -1,29 +1,31 @@
 package org.example.chessgame.ChessObject;
 
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
+import org.example.chessgame.ChessObject.Move.Move;
+import org.example.chessgame.ChessObject.Move.PreMove;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class ChessBoard {
-    private ChessPiece[][] chessPieceBoard;
-    private int[][] kingPosition;
-    private Stack<Move> history = new Stack<Move>();
+    private final ChessPiece[][] chessPieceBoard;
+    private final int[][] kingPosition;
+    private final Stack<Move> history;
+    private List<PreMove> preMoveList;
 
 
     public ChessBoard() {
         //Start from 1 -> 8
         chessPieceBoard = new ChessPiece[9][9];
         kingPosition = new int[2][2];
+        history = new Stack<>();
+        preMoveList = new LinkedList<>();
     }
 
     private void initChessPosition() {
         for (int i = 1; i <= 8; i++) {
             Arrays.fill(chessPieceBoard[i], null);
         }
+
+        history.clear();
 
         // Pawn
         for (int x = 1; x <= 8; x++) {
@@ -81,7 +83,7 @@ public class ChessBoard {
         chessPieceBoard[y][x] = null;
     }
 
-    public boolean isOutside(int x, int y) {
+    public static boolean isOutside(int x, int y) {
         return (x < 1 || x > 8 || y < 1 || y > 8);
     }
 
@@ -114,8 +116,7 @@ public class ChessBoard {
     }
 
     public void setPromote(int endX, int endY, ChessPiece chessPiece) {
-        // Lưu
-        moveChess(endX, endY, 0, 0);
+        moveChess(endX, endY, 0, 0, getLastMove(0).isPreMove);
         setChessPiece(endX, endY, chessPiece);
         getLastMove(0).isSpecialMove = true;
     }
@@ -123,8 +124,8 @@ public class ChessBoard {
     /**
      * not check and just move chess piece
      */
-    private void moveChess(int startX, int startY, int endX, int endY) {
-        history.add(new Move(startX, startY, endX, endY, getChessPiece(endX, endY), false));
+    private void moveChess(int startX, int startY, int endX, int endY, boolean isPreMove) {
+        history.add(new Move(startX, startY, endX, endY, getChessPiece(endX, endY), false, isPreMove));
 
         setChessPiece(endX, endY, getChessPiece(startX, startY));
         setChessPiece(startX, startY, null);
@@ -133,7 +134,17 @@ public class ChessBoard {
     }
 
     public Move getLastMove(int lastNumber) {
+        if (history.size() <= lastNumber) {
+            return null;
+        }
         return history.get(history.size() - 1 - lastNumber);
+    }
+
+    public PreMove getLastPreMove(int lastNumber) {
+        if (preMoveList.isEmpty()) {
+            return null;
+        }
+        return preMoveList.get(preMoveList.size() - 1 - lastNumber);
     }
 
     private Move rollbackOne() {
@@ -159,6 +170,16 @@ public class ChessBoard {
         moves.add(lastMove);
 
         if (lastMove.isSpecialMove) {
+            moves.add(rollbackOne());
+        }
+
+        return moves;
+    }
+
+    public List<Move> rollbackAllPreMoves() {
+        List<Move> moves = new ArrayList<>();
+
+        while (!history.isEmpty() && history.getLast().isPreMove) {
             moves.add(rollbackOne());
         }
 
@@ -200,7 +221,11 @@ public class ChessBoard {
         return isUnderAttack(kingX, kingY, team);
     }
 
-    private boolean checkCanMovePiece(int startX, int startY, int endX, int endY) {
+    public boolean checkCanPreMovePiece(int startX, int startY, int endX, int endY) {
+        return getChessPiece(startX, startY).checkCanPreMove(this, startX, startY, endX, endY);
+    }
+
+    public boolean checkCanMovePiece(int startX, int startY, int endX, int endY) {
         if (existChessPiece(endX, endY)
                 && getChessPieceTeam(startX, startY) == getChessPieceTeam(endX, endY)) {
             return false;
@@ -209,7 +234,7 @@ public class ChessBoard {
         ChessPiece.Team team = getChessPieceTeam(startX, startY);
         if (getChessPiece(startX, startY).checkValidMove(this, startX, startY, endX, endY)) {
             // Simulation
-            moveChess(startX, startY, endX, endY);
+            moveChess(startX, startY, endX, endY, false);
             if (checkKingInCheck(team)) {
                 rollback();
                 return false;
@@ -233,38 +258,54 @@ public class ChessBoard {
     }
 
     /**
-     *
-     * @return true if move successfully and move piece
+     * if don't call continuePreMove in GameController, this will clear PreMoveList
      */
-    public boolean moveChessPiece(int startX, int startY, int endX, int endY) {
-        if (checkCanMovePiece(startX, startY, endX, endY)) {
-            boolean specialMove = false;
-            // Kiểm tra nhập thành
-            if (getChessPiece(startX, startY) instanceof King && !getChessPiece(startX, startY).checkValidKill(this, startX, startY, endX, endY)) {
-                // Di chuyển xe
-                if (endX == 3) {
-                    moveChess(1, startY, startX - 1, endY);
-                } else {
-                    moveChess(8, startY, startX + 1, endY);
-                }
-                specialMove = true;
-            }
-            // Kiểm tra bắt tốt qua đường
-            int direction = (getChessPieceTeam(startX, startY) == ChessPiece.Team.WHITE) ? -1 : 1; // White moves up (-1), Black moves down (+1)
-            if (getChessPiece(startX, startY) instanceof Pawn && Math.abs(startX - endX) == 1 && startY + direction == endY && !existChessPiece(endX, endY)) {
-                moveChess(endX, endY - direction, 0, 0);
-                specialMove = true;
-            }
+    public List<PreMove> continueInPreMoveList() {
+        List<PreMove> moves = preMoveList;
+        preMoveList = new LinkedList<>();
 
-            moveChess(startX, startY, endX, endY);
+        return moves;
+    }
 
-            if (specialMove) {
-                getLastMove(0).isSpecialMove = true;
-            }
-
-            return true;
+    /**
+     * call checkCanPreMovePiece() before call this func if isPreMove=true
+     * call checkCanMovePiece() before call this func if isPreMove=false
+     */
+    public void moveChessPiece(int startX, int startY, int endX, int endY, boolean isPreMove) {
+        if (isPreMove) {
+            preMoveList.add(new PreMove(startX, startY, endX, endY));
         }
 
-        return false;
+        boolean specialMove = false;
+        // Kiểm tra nhập thành
+        if (getChessPiece(startX, startY) instanceof King && Math.abs(endX - startX) == 2) {
+            // Di chuyển xe
+            if (endX == 3) {
+                moveChess(1, startY, startX - 1, endY, isPreMove);
+            } else {
+                moveChess(8, startY, startX + 1, endY, isPreMove);
+            }
+            specialMove = true;
+        }
+        // Kiểm tra bắt tốt qua đường
+        int direction = (getChessPieceTeam(startX, startY) == ChessPiece.Team.WHITE) ? -1 : 1; // White moves up (-1), Black moves down (+1)
+        if (getChessPiece(startX, startY) instanceof Pawn && Math.abs(startX - endX) == 1 && startY + direction == endY && !existChessPiece(endX, endY)) {
+            if (existChessPiece(endX, endY - direction) && getChessPieceTeam(endX, endY - direction) != getChessPieceTeam(startX, startY)) {
+                moveChess(endX, endY - direction, 0, 0, isPreMove);
+                specialMove = true;
+            }
+        }
+
+        moveChess(startX, startY, endX, endY, isPreMove);
+
+        if (specialMove) {
+            // Đảo để đảm bảo move event nằm sau extra move
+            Move lastMove = history.pop();
+            Move last1Move = history.pop();
+            history.push(lastMove);
+            history.push(last1Move);
+
+            getLastMove(0).isSpecialMove = true;
+        }
     }
 }

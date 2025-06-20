@@ -51,6 +51,8 @@ public abstract class ChessPiece {
         return moveNumber;
     }
 
+    public abstract boolean checkCanPreMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY);
+
     /**
      * Check if exist chess pieces between two chess pieces.
      * Check if path is valid.

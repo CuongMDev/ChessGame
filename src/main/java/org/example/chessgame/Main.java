@@ -13,7 +13,11 @@ public class Main extends Application {
         GameController gameController = (GameController) Controller.init(stage, getClass().getResource("GameBoard/Game.fxml"));
         stage.setTitle("Chess!");
         stage.setScene(gameController.getParent().getScene());
+        stage.setResizable(false);
         stage.show();
+        stage.setOnCloseRequest(event -> {
+            gameController.closeSocket();
+        });
     }
 
     public static void main(String[] args) {

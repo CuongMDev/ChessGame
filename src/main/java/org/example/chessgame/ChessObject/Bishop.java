@@ -30,12 +30,21 @@ public class Bishop extends ChessPiece {
     }
 
     @Override
-    public boolean checkValidKill(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+    public boolean checkCanPreMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
         int dx = Math.abs(endX - startX);
         int dy = Math.abs(endY - startY);
 
         // The bishop moves diagonally, meaning dx must equal dy
         if (dx != dy) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean checkValidKill(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        if (!checkCanPreMove(chessBoard, startX, startY, endX, endY)) {
             return false;
         }
 

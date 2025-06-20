@@ -1,5 +1,7 @@
 package org.example.chessgame.ChessObject;
 
+import org.example.chessgame.ChessObject.Move.Move;
+
 public class Pawn extends ChessPiece {
     public Pawn(Team team) {
         super(team);
@@ -8,6 +10,22 @@ public class Pawn extends ChessPiece {
 
     public int getSkinCount() {
         return 3;
+    }
+
+    @Override
+    public boolean checkCanPreMove(ChessBoard chessBoard, int startX, int startY, int endX, int endY) {
+        int direction = (chessBoard.getChessPieceTeam(startX, startY) == Team.WHITE) ? -1 : 1; // White moves up (-1), Black moves down (+1)
+        int startRow = (chessBoard.getChessPieceTeam(startX, startY) == Team.WHITE) ? 7 : 2;   // White starts at row 6, Black at row 1
+
+        if (Math.abs(startX - endX) <= 1 && endY == startY + direction) {
+            return true;
+        }
+        // First move: two steps forward
+        if (startX == endX && startY == startRow && endY == startY + 2 * direction) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override
