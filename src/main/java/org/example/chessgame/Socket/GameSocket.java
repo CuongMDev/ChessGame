@@ -100,10 +100,11 @@ public class GameSocket {
         out.println(jsonData);
     }
 
-    public void sendResetData(boolean humanPlayFirst) {
+    public void sendResetData(boolean humanPlayFirst, String fen) {
         JSONObject jsonData = new JSONObject();
         jsonData.put("reset", 1);
         jsonData.put("human_play_first", humanPlayFirst);
+        jsonData.put("fen", fen);
         out.println(jsonData);
     }
 

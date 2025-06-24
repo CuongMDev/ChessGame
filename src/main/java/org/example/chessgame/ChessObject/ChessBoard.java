@@ -6,11 +6,12 @@ import org.example.chessgame.ChessObject.Move.PreMove;
 import java.util.*;
 
 public class ChessBoard {
+    public static final String STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
     private final ChessPiece[][] chessPieceBoard;
     private final int[][] kingPosition;
     private final Stack<Move> history;
     private List<PreMove> preMoveList;
-
 
     public ChessBoard() {
         //Start from 1 -> 8
@@ -20,51 +21,116 @@ public class ChessBoard {
         preMoveList = new LinkedList<>();
     }
 
-    private void initChessPosition() {
+    /**
+     *
+     * @param fen
+     * @return current turn
+     */
+    public ChessPiece.Team loadFromFEN(String fen) {
         for (int i = 1; i <= 8; i++) {
             Arrays.fill(chessPieceBoard[i], null);
         }
 
         history.clear();
 
-        // Pawn
-        for (int x = 1; x <= 8; x++) {
-            setChessPiece(x, 7, new Pawn(ChessPiece.Team.WHITE));
-            setChessPiece(x, 2, new Pawn(ChessPiece.Team.BLACK));
+        String[] parts = fen.split(" ");
+        if (parts.length < 6) throw new IllegalArgumentException("Chuỗi FEN không hợp lệ");
+
+        // === 1. Load bàn cờ ===
+        String[] rows = parts[0].split("/");
+
+        // === 2. Lượt đi ===
+        ChessPiece.Team currentTurn = parts[1].equals("w") ? ChessPiece.Team.WHITE : ChessPiece.Team.BLACK;
+
+        // === 3. Nhập thành ===
+        String castlingRights = parts[2];
+
+        // === 4. En passant ===
+        String enPassantTarget = parts[3];
+
+        // === 5. Halfmove clock ===
+        int halfMoveClock = Integer.parseInt(parts[4]);
+
+        // === 6. Fullmove number ===
+        int fullMoveNumber = Integer.parseInt(parts[5]);
+
+        boolean whiteKingSide = castlingRights.contains("K");
+        boolean whiteQueenSide = castlingRights.contains("Q");
+        boolean blackKingSide = castlingRights.contains("k");
+        boolean blackQueenSide = castlingRights.contains("q");
+
+        // === 1. Load bàn cờ ===
+        for (int row = 0; row < 8; row++) {
+            String fenRow = rows[row];
+            int col = 0;
+
+            for (char ch : fenRow.toCharArray()) {
+                if (Character.isDigit(ch)) {
+                    col += ch - '0'; // bỏ qua ô trống
+                } else {
+                    int x = col + 1;        // cột (1..8)
+                    int y = row + 1;        // hàng (8..1)
+
+                    ChessPiece.Team team = Character.isUpperCase(ch) ? ChessPiece.Team.WHITE : ChessPiece.Team.BLACK;
+                    ch = Character.toLowerCase(ch);
+
+                    ChessPiece piece = switch (ch) {
+                        case 'p' -> new Pawn(team);
+                        case 'r' -> new Rook(team);
+                        case 'n' -> new Knight(team);
+                        case 'b' -> new Bishop(team);
+                        case 'q' -> new Queen(team);
+                        case 'k' -> new King(team);
+                        default -> null;
+                    };
+
+                    if (piece != null) {
+                        if (piece instanceof King) {
+                            if (team == ChessPiece.Team.WHITE && (x != 5 || y != 8)) {
+                                piece.changeMoveNumber(1);
+                            }
+                            if (team == ChessPiece.Team.BLACK && (x != 5 || y != 1)) {
+                                piece.changeMoveNumber(1);
+                            }
+                        } else if (piece instanceof Rook) {
+                            if (team == ChessPiece.Team.WHITE) {
+                                // Rook trắng king-side (h8)
+                                if (x == 8 && y == 8) {
+                                    piece.changeMoveNumber(whiteKingSide ? 0 : 1);
+                                }
+                                // Rook trắng queen-side (a8)
+                                else if (x == 1 && y == 8) {
+                                    piece.changeMoveNumber(whiteQueenSide ? 0 : 1);
+                                }
+                            } else {
+                                // Rook đen king-side (h1)
+                                if (x == 8 && y == 1) {
+                                    piece.changeMoveNumber(blackKingSide ? 0 : 1);
+                                }
+                                // Rook đen queen-side (a1)
+                                else if (x == 1 && y == 1) {
+                                    piece.changeMoveNumber(blackQueenSide ? 0 : 1);
+                                }
+                            }
+                        }
+                        setChessPiece(x, y, piece);
+                    }
+
+                    col++;
+                }
+            }
         }
 
-        // Castle
-        setChessPiece(1, 8, new Rook(ChessPiece.Team.WHITE));
-        setChessPiece(8, 8, new Rook(ChessPiece.Team.WHITE));
-
-        setChessPiece(1, 1, new Rook(ChessPiece.Team.BLACK));
-        setChessPiece(8, 1, new Rook(ChessPiece.Team.BLACK));
-
-        // Knight
-        setChessPiece(2, 8, new Knight(ChessPiece.Team.WHITE));
-        setChessPiece(7, 8, new Knight(ChessPiece.Team.WHITE));
-
-        setChessPiece(2, 1, new Knight(ChessPiece.Team.BLACK));
-        setChessPiece(7, 1, new Knight(ChessPiece.Team.BLACK));
-
-        // Bishop
-        setChessPiece(3, 8, new Bishop(ChessPiece.Team.WHITE));
-        setChessPiece(6, 8, new Bishop(ChessPiece.Team.WHITE));
-
-        setChessPiece(3, 1, new Bishop(ChessPiece.Team.BLACK));
-        setChessPiece(6, 1, new Bishop(ChessPiece.Team.BLACK));
-
-        // Queen
-        setChessPiece(4, 8, new Queen(ChessPiece.Team.WHITE));
-        setChessPiece(4, 1, new Queen(ChessPiece.Team.BLACK));
-
-        // King
-        setChessPiece(5, 8, new King(ChessPiece.Team.WHITE));
-        setChessPiece(5, 1, new King(ChessPiece.Team.BLACK));
+        return currentTurn;
     }
 
-    public void initChessBoard() {
-        initChessPosition();
+    /**
+     *
+     * @param fen
+     * @return current turn
+     */
+    public ChessPiece.Team initChessBoard(String fen) {
+        return loadFromFEN(fen);
     }
 
     public ChessPiece.Team getChessPieceTeam(int x, int y) {
@@ -300,10 +366,10 @@ public class ChessBoard {
 
         if (specialMove) {
             // Đảo để đảm bảo move event nằm sau extra move
-            Move lastMove = history.pop();
-            Move last1Move = history.pop();
-            history.push(lastMove);
-            history.push(last1Move);
+            Move moveEvent = history.pop();
+            Move extraMove = history.pop();
+            history.push(moveEvent);
+            history.push(extraMove);
 
             getLastMove(0).isSpecialMove = true;
         }

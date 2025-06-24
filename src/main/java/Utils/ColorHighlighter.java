@@ -3,11 +3,24 @@ package Utils;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 
+import java.util.Stack;
+
 public class ColorHighlighter {
-    private static final double BLEND_FACTOR = 0.3;
+    private static final double BLEND_FACTOR = 0.5;
+
+    Stack<Color>[][] colorBoard;
+
+    public ColorHighlighter() {
+        colorBoard = new Stack[9][9];
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                colorBoard[i][j] = new Stack<>();
+            }
+        }
+    }
 
     // Lấy màu nền hiện tại từ style CSS "-fx-background-color"
-    public static Color getBackgroundColorFromStyle(Pane pane) {
+    public Color getBackgroundColorFromStyle(Pane pane) {
         String style = pane.getStyle();
         if (style == null) return Color.WHITE;
 
@@ -27,12 +40,35 @@ public class ColorHighlighter {
         return Color.WHITE;
     }
 
-    // Blend màu vàng lên màu nền pane theo blendFactor
-    public static void highlightYellow(Pane pane) {
+    public Color getLastColor(int x, int y) {
+        if (colorBoard[x][y].isEmpty()) return null;
+        return colorBoard[x][y].peek();
+    }
+
+    public void addColor(Pane pane, int x, int y, Color color) {
+        if (!colorBoard[x][y].isEmpty()) {
+            restoreColor(pane, x, y);
+        }
+
+        colorBoard[x][y].add(color);
+        highlightColor(pane, x, y, color);
+    }
+
+    // Khôi phục màu gốc dựa trên màu đã blend và blendFactor
+    public void popColor(Pane pane, int x, int y) {
+        restoreColor(pane, x, y);
+        colorBoard[x][y].pop();
+        if (!colorBoard[x][y].isEmpty()) {
+            highlightColor(pane, x, y, colorBoard[x][y].peek());
+        }
+    }
+
+    // Blend màu vàng/đỏ lên màu nền pane theo blendFactor
+    private void highlightColor(Pane pane, int x, int y, Color color) {
         Color base = getBackgroundColorFromStyle(pane);
 
         double r = base.getRed()   * (1 - BLEND_FACTOR) + 1.0 * BLEND_FACTOR;
-        double g = base.getGreen() * (1 - BLEND_FACTOR) + 1.0 * BLEND_FACTOR;
+        double g = base.getGreen() * (1 - BLEND_FACTOR) + (color == Color.YELLOW ? 1 : 0) * BLEND_FACTOR;
         double b = base.getBlue()  * (1 - BLEND_FACTOR) + 0.0 * BLEND_FACTOR;
 
         Color blended = new Color(r, g, b, base.getOpacity());
@@ -40,20 +76,19 @@ public class ColorHighlighter {
         setBackgroundColor(pane, blended);
     }
 
-    // Khôi phục màu gốc dựa trên màu đã blend và blendFactor
-    public static void restoreOriginalColor(Pane pane) {
+    private void restoreColor(Pane pane, int x, int y) {
         Color blended = getBackgroundColorFromStyle(pane);
-        Color original = calculateOriginalColor(blended, BLEND_FACTOR);
+        Color original = calculateOriginalColor(x, y, blended, BLEND_FACTOR);
 
         setBackgroundColor(pane, original);
     }
 
     // Tính màu gốc từ màu blend và blendFactor
-    private static Color calculateOriginalColor(Color blended, double blendFactor) {
+    private Color calculateOriginalColor(int x, int y, Color blended, double blendFactor) {
         if (blendFactor >= 1.0) throw new IllegalArgumentException("blendFactor must be < 1");
 
         double r = (blended.getRed()   - blendFactor) / (1 - blendFactor);
-        double g = (blended.getGreen() - blendFactor) / (1 - blendFactor);
+        double g = (blended.getGreen() - (colorBoard[x][y].peek() == Color.YELLOW ? blendFactor : 0)) / (1 - blendFactor);
         double b = blended.getBlue() / (1 - blendFactor);
 
         r = clamp(r);
@@ -64,14 +99,14 @@ public class ColorHighlighter {
     }
 
     // Giới hạn giá trị màu trong khoảng 0..1
-    private static double clamp(double val) {
+    private double clamp(double val) {
         if (val < 0) return 0;
         if (val > 1) return 1;
         return val;
     }
 
     // Đặt màu nền cho Pane dưới dạng CSS rgba()
-    private static void setBackgroundColor(Pane pane, Color color) {
+    private void setBackgroundColor(Pane pane, Color color) {
         String rgba = String.format("rgba(%d,%d,%d,%.2f)",
                 (int)(color.getRed() * 255),
                 (int)(color.getGreen() * 255),
