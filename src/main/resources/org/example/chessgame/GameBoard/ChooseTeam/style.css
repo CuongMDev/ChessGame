@@ -1,0 +1,30 @@
+.white-team {
+    -fx-background-color: #aaaaaa;        /* Nền xám sáng */
+    -fx-text-fill: #1e1e1e;               /* Chữ xám đậm hơn nữa để nổi bật */
+    -fx-font-size: 32px;                  /* Nhỏ hơn 1 chút để cân đối trong nút */
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+
+    -fx-padding: 10 20;                   /* Giúp chữ có khoảng thoáng bên trong */
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0.2, 0, 1);
+}
+.white-team:hover {
+    -fx-background-color: white
+}
+
+.black-team {
+    -fx-background-color: #2b2b2b;        /* Nền xám sáng */
+    -fx-text-fill: #eeeeee;               /* Chữ xám đậm hơn nữa để nổi bật */
+    -fx-font-size: 32px;                  /* Nhỏ hơn 1 chút để cân đối trong nút */
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+
+    -fx-padding: 10 20;                   /* Giúp chữ có khoảng thoáng bên trong */
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0.2, 0, 1);
+}
+
+.black-team:hover {
+    -fx-background-color: black
+}

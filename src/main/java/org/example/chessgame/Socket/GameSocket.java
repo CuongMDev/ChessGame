@@ -14,7 +14,7 @@ public class GameSocket {
 
     public void runAiPython() throws IOException {
         // Lệnh chạy file Python
-        ProcessBuilder processBuilder = new ProcessBuilder("python", "game_socket.py");
+        ProcessBuilder processBuilder = new ProcessBuilder("python", "-m", "Play.game_socket");
         processBuilder.directory(new File("C:\\Users\\mcuon\\PycharmProjects\\ChessProject\\"));
         // Chạy tiến trình
         aiPythonProcess = processBuilder.start();

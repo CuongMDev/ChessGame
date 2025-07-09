@@ -1,17 +1,29 @@
-.highlight-border {
-    -fx-border-color: white;
-    -fx-border-width: 2;
-}
-
 .background {
     -fx-background-image: url("images/background.jpg");
     -fx-background-repeat: no-repeat;
     -fx-background-size: cover; /* hoặc contain */
     -fx-background-position: center center;
+
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0.2, 0, 1);
+}
+
+.result-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-font-style: normal;
+    -fx-text-fill: linear-gradient(to bottom, #ffffff, #ffd700); /* trắng vàng ánh kim */
+
+    -fx-font-family: "Verdana", "Segoe UI", sans-serif;
+
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 8, 0.3, 0, 3),
+    dropshadow(gaussian, rgba(255,215,0,0.6), 12, 0.5, 0, 0); /* đổ bóng + ánh sáng */
+
+    -fx-padding: 30 0 10 0;
+    -fx-alignment: center;
 }
 
 .chess-action-button {
-    -fx-font-size: 16px;
+    -fx-font-size: 10px;
     -fx-font-weight: bold;
     -fx-text-fill: white;
     -fx-font-family: "Segoe UI", "Arial", sans-serif;

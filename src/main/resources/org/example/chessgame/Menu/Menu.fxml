@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane fx:id="mainStackPane" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.chessgame.Menu.MenuController">
+   <children>
+      <VBox fx:id="menuBox" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="756.0" styleClass="main-box" stylesheets="@style.css">
+         <children>
+            <VBox alignment="TOP_CENTER" prefHeight="97.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="91.0" prefWidth="512.0" styleClass="chess-title" text="Chess Game With AI" />
+               </children>
+            </VBox>
+            <JFXButton alignment="TOP_RIGHT" focusTraversable="false" onMouseClicked="#onPlayWithBotClicked" styleClass="menu-button" text="Play With Bot" />
+            <JFXButton focusTraversable="false" onMouseClicked="#onTwoPlayerClicked" styleClass="menu-button" text="2 Player" />
+            <JFXButton focusTraversable="false" styleClass="menu-button" text="Setting" />
+            <JFXButton focusTraversable="false" styleClass="menu-button" text="Exit" />
+         </children>
+      </VBox>
+   </children>
+</StackPane>

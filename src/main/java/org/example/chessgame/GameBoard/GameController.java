@@ -2,6 +2,7 @@ package org.example.chessgame.GameBoard;
 
 import Utils.ColorHighlighter;
 import Utils.Utils;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
@@ -16,6 +17,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
 import org.example.chessgame.Abstract.Controller;
 import org.example.chessgame.ChessObject.*;
 import org.example.chessgame.ChessObject.Move.Move;
@@ -23,29 +25,35 @@ import org.example.chessgame.ChessObject.Move.PreMove;
 import org.example.chessgame.Socket.GameSocket;
 import org.example.chessgame.Socket.SocketListener;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GameController extends Controller {
     @FXML
-    GridPane chessBoardBox;
-    Pane[][] chessBoardPane;
+    private GridPane chessBoardBox;
+    private Pane[][] chessBoardPane;
     @FXML
-    HBox mainBox;
+    private StackPane mainStackPane;
     @FXML
-    Pane overlayPane;
-    ChessPiece.Team playerTurn;
-    ChessPiece.Team currentTurn;
+    private HBox gameBox;
+    @FXML
+    private Pane overlayPane;
+    private ChessPiece.Team playerTurn;
+    private ChessPiece.Team currentTurn;
+
+    private ChooseTeamController chooseTeamController;
+    public GameResultController gameResultController;
 
     @FXML
     Button drawButton;
-
+    @FXML
+    Button resignButton;
     @FXML
     Button rollbackButton;
 
     private boolean gameOver;
-    private String result;
     private boolean playWithBot;
 
     // promotion
@@ -294,21 +302,19 @@ public class GameController extends Controller {
 
     private void onGameOver(String result) {
         gameOver = true;
-        this.result = result;
         rollbackAndClearAllPreMoves();
         rollbackButton.setDisable(true);
+        resignButton.setDisable(true);
         if (currentChooseImage != null) {
             currentChooseImage.fireEvent(Utils.SecondaryMouse); // Thả
         }
 
-        new Thread(() -> {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            Platform.runLater(() -> resetGame(true, false, ChessBoard.STARTING_FEN));
-        }).start();
+        PauseTransition pause = new PauseTransition(Duration.seconds(1));
+        pause.setOnFinished(event -> {
+            gameResultController.setResult(result);
+            mainStackPane.getChildren().add(gameResultController.getParent());
+        });
+        pause.play();
     }
 
     private void createPromotionBoard(int endX, int endY, boolean isPreMove) {
@@ -441,7 +447,7 @@ public class GameController extends Controller {
 
                 // play with bot => size > 1
                 // play with player => size > 0
-                if (chessBoard.getLastMove(playWithBot ? 1 : 0) == null) {
+                if (chessBoard.getLastMove((playWithBot && playerTurn == ChessPiece.Team.BLACK) ? 1 : 0) == null) {
                     rollbackButton.setDisable(true);
                 } else {
                     rollbackButton.setDisable(false);
@@ -521,7 +527,7 @@ public class GameController extends Controller {
                         highlighter.addColor(containPane.get(), startCell.get()[0], startCell.get()[1], Color.YELLOW);
                     }
                 } else {
-                        highlighter.addColor(containPane.get(), startCell.get()[0], startCell.get()[1], Color.YELLOW);
+                    highlighter.addColor(containPane.get(), startCell.get()[0], startCell.get()[1], Color.YELLOW);
                 }
 
                 if (!ChessBoard.isOutside(currentCell.get()[0], currentCell.get()[1])) {
@@ -646,7 +652,7 @@ public class GameController extends Controller {
         chessBoardPane = new Pane[10][10];
         highlighter = new ColorHighlighter();
 
-        mainBox.setPadding(new Insets(2, 0, 2, 0)); // Giảm viền trên và dưới
+        gameBox.setPadding(new Insets(2, 0, 2, 0)); // Giảm viền trên và dưới
 
         chessBoardBox.getColumnConstraints().clear();
         chessBoardBox.getRowConstraints().clear();
@@ -671,9 +677,9 @@ public class GameController extends Controller {
         // Always square
         chessBoardBox.prefWidthProperty().bind(
                 Bindings.createDoubleBinding(
-                        () -> Math.min(mainBox.getHeight(), mainBox.getWidth()),
-                        mainBox.heightProperty(),
-                        mainBox.widthProperty()
+                        () -> Math.min(gameBox.getHeight(), gameBox.getWidth()),
+                        gameBox.heightProperty(),
+                        gameBox.widthProperty()
                 )
         );
         chessBoardBox.prefHeightProperty().bind(chessBoardBox.prefWidthProperty());
@@ -698,19 +704,31 @@ public class GameController extends Controller {
         }
     }
 
-    private void initGameplay(boolean playWithBot, boolean humanPlayFirst, String fen) {
-        this.playWithBot = playWithBot;
+    public void resetGameBoard(String fen) {
+        while (mainStackPane.getChildren().size() > 1) {
+            mainStackPane.getChildren().removeLast();
+        }
+        mainStackPane.getChildren().add(chooseTeamController.getParent());
+        gameBox.setDisable(true);
+
         this.isPromoting = false;
         this.gameOver = false;
         drawButton.setDisable(true);
+        resignButton.setDisable(false);
         rollbackButton.setDisable(true);
 
         highlightLastMoveEvent(true);
         this.currentTurn = chessBoard.initChessBoard(fen);
+
+        refresh();
+    }
+
+    public void resetGameplay(boolean playWithBot, boolean humanPlayFirst) {
+        this.playWithBot = playWithBot;
         this.playerTurn = humanPlayFirst ? currentTurn
                 : (currentTurn == ChessPiece.Team.WHITE ? ChessPiece.Team.BLACK : ChessPiece.Team.WHITE);
 
-        gameSocket.sendResetData(humanPlayFirst, fen);
+        gameSocket.sendResetData(humanPlayFirst, chessBoard.getInitFen());
     }
 
     private void addNumOrder() {
@@ -763,9 +781,33 @@ public class GameController extends Controller {
         }
     }
 
-    private void resetGame(boolean playWithBot, boolean humanPlayFirst, String fen) {
-        initGameplay(playWithBot, humanPlayFirst, fen);
-        refresh();
+    private void initAdditionController() throws IOException {
+        chooseTeamController = (ChooseTeamController) Controller.init(getStage(), getClass().getResource("ChooseTeam/chooseTeam.fxml"));
+        chooseTeamController.whiteButton.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                resetGameplay(true, true);
+                mainStackPane.getChildren().removeLast();
+                gameBox.setDisable(false);
+            }
+        });
+        chooseTeamController.blackButton.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                resetGameplay(true, false);
+                mainStackPane.getChildren().removeLast();
+                gameBox.setDisable(false);
+            }
+        });
+
+        gameResultController = (GameResultController) Controller.init(getStage(), getClass().getResource("gameResult/gameResult.fxml"));
+        mainStackPane.getChildren().add(gameResultController.getParent()); // avoid lagging
+        mainStackPane.getChildren().removeLast();
+        gameResultController.rematchButton.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                mainStackPane.getChildren().removeLast();
+
+                resetGameBoard(ChessBoard.STARTING_FEN);
+            }
+        });
     }
 
     public void initSocket() {
@@ -795,9 +837,9 @@ public class GameController extends Controller {
     }
 
     @FXML
-    private void initialize() {
+    private void initialize() throws IOException {
         initSocket();
         initChessBoard();
-        resetGame(true, false, ChessBoard.STARTING_FEN);
+        initAdditionController();
     }
 }

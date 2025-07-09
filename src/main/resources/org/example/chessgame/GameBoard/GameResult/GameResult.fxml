@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="403.0" prefWidth="315.0" styleClass="background" stylesheets="@style.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.chessgame.GameBoard.GameResultController">
+   <children>
+      <JFXButton fx:id="rematchButton" focusTraversable="false" layoutX="185.0" layoutY="285.0" prefHeight="31.0" prefWidth="106.0" styleClass="chess-action-button" text="Rematch" />
+      <JFXButton fx:id="exitToMenuButton" focusTraversable="false" layoutX="24.0" layoutY="285.0" prefHeight="29.0" prefWidth="106.0" styleClass="chess-action-button" text="Exit to Menu" />
+      <Label fx:id="resultLabel" alignment="CENTER" layoutX="95.0" layoutY="104.0" prefHeight="65.0" prefWidth="125.0" styleClass="result-title" text="White-win" />
+   </children>
+</AnchorPane>

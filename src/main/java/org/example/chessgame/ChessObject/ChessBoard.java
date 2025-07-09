@@ -12,6 +12,7 @@ public class ChessBoard {
     private final int[][] kingPosition;
     private final Stack<Move> history;
     private List<PreMove> preMoveList;
+    private String initFen;
 
     public ChessBoard() {
         //Start from 1 -> 8
@@ -21,12 +22,18 @@ public class ChessBoard {
         preMoveList = new LinkedList<>();
     }
 
+    public String getInitFen() {
+        return initFen;
+    }
+
     /**
      *
      * @param fen
      * @return current turn
      */
     public ChessPiece.Team loadFromFEN(String fen) {
+        this.initFen = fen;
+
         for (int i = 1; i <= 8; i++) {
             Arrays.fill(chessPieceBoard[i], null);
         }

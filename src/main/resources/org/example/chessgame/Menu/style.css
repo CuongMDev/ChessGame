@@ -1,0 +1,50 @@
+.main-box {
+    -fx-background-image: url("images/background.jpg");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: cover; /* hoặc contain */
+    -fx-background-position: center center;
+
+    -fx-spacing: 10;
+}
+
+.chess-title {
+    -fx-font-size: 40px;
+    -fx-font-weight: bold;
+    -fx-font-style: normal;
+    -fx-text-fill: linear-gradient(to bottom, #ffffff, #ffd700); /* trắng vàng ánh kim */
+
+    -fx-font-family: "Verdana", "Segoe UI", sans-serif;
+
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 8, 0.3, 0, 3),
+    dropshadow(gaussian, rgba(255,215,0,0.6), 12, 0.5, 0, 0); /* đổ bóng + ánh sáng */
+
+    -fx-padding: 30 0 10 0;
+    -fx-alignment: center;
+}
+
+.menu-button {
+    -fx-background-color: linear-gradient(to bottom, #1d3557, #0b2545); /* Xanh navy đậm */
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: gold;
+    -fx-border-width: 1;
+
+    -fx-padding: 10 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0.2, 0, 2);
+    -fx-transition: all 0.3s ease-in-out;
+}
+
+.menu-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #2a4d77, #1a375e);
+}
+
+.menu-button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #0a1f3d, #081c36);
+    -fx-translate-y: 1;
+}
