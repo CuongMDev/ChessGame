@@ -22,8 +22,11 @@ import org.example.chessgame.Abstract.Controller;
 import org.example.chessgame.ChessObject.*;
 import org.example.chessgame.ChessObject.Move.Move;
 import org.example.chessgame.ChessObject.Move.PreMove;
+import org.example.chessgame.ChessObject.Move.SpecialMove;
 import org.example.chessgame.Socket.GameSocket;
 import org.example.chessgame.Socket.SocketListener;
+import org.example.chessgame.Sound.GameSounds;
+import org.example.chessgame.Sound.GameSounds;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,6 +45,8 @@ public class GameController extends Controller {
     private Pane overlayPane;
     private ChessPiece.Team playerTurn;
     private ChessPiece.Team currentTurn;
+
+    GameSounds gameSound;
 
     private ChooseTeamController chooseTeamController;
     public GameResultController gameResultController;
@@ -118,7 +123,7 @@ public class GameController extends Controller {
         List<Move> moveList = chessBoard.rollbackAllPreMoves();
         for (Move move : moveList) {
             moveChessPane(move.endX, move.endY, move.startX, move.startY);
-            if (!move.isSpecialMove) { // is move event
+            if (move.specialMove == SpecialMove.NORMAL) { // is move event
                 highlighter.popColor(getPaneFromGridPane(move.endX, move.endY), move.endX, move.endY);
                 highlighter.popColor(getPaneFromGridPane(move.startX, move.startY), move.startX, move.startY);
             }
@@ -208,7 +213,9 @@ public class GameController extends Controller {
     }
 
     private void emitReceiveEvent(String moveUCI, boolean canDraw, String result) {
-        drawButton.setDisable(!canDraw);
+        if (gameOver) {
+            return;
+        }
         rollbackAllPreMoves();
 
         if (moveUCI != null) {
@@ -234,6 +241,8 @@ public class GameController extends Controller {
             }
             handleMoveEvent(startX, startY, endX, endY, promotionPiece);
         }
+        
+        drawButton.setDisable(playerTurn != currentTurn || !canDraw);
 
         if (result.equals("1/2-1/2")) {
             onGameOver("Draw");
@@ -313,6 +322,7 @@ public class GameController extends Controller {
         pause.setOnFinished(event -> {
             gameResultController.setResult(result);
             mainStackPane.getChildren().add(gameResultController.getParent());
+            GameSounds.play(gameSound.gameEndSound);
         });
         pause.play();
     }
@@ -376,6 +386,8 @@ public class GameController extends Controller {
         }
         chessBoard.setPromote(x, y, promotionPiece);
 
+        GameSounds.play(gameSound.promotionSound);
+
         isPromoting = false;
     }
 
@@ -385,7 +397,7 @@ public class GameController extends Controller {
         if (lastMove == null) {
             return;
         }
-        if (lastMove.isSpecialMove) {
+        if (lastMove.specialMove != SpecialMove.NORMAL) {
             lastMove = chessBoard.getLastMove(1); // đổi sang move event vì đang ở extra move
         }
 
@@ -428,7 +440,7 @@ public class GameController extends Controller {
             }
 
             // Đặc biệt thì di chuyển thêm lần nữa
-            if (chessBoard.getLastMove(0).isSpecialMove) {
+            if (chessBoard.getLastMove(0).specialMove != SpecialMove.NORMAL) {
                 Move extraMove = chessBoard.getLastMove(0);
                 moveChessPane(extraMove.startX, extraMove.startY, extraMove.endX, extraMove.endY);
             }
@@ -444,6 +456,24 @@ public class GameController extends Controller {
 
             if (!isPreMove) {
                 highlightLastMoveEvent(false);
+
+                // play sound
+                if (chessBoard.checkKingInCheck(currentTurn)) {
+                    GameSounds.play(gameSound.moveCheckSound);
+                } else if (!isPromoting) {
+                    SpecialMove specialMove = chessBoard.getLastMove(0).specialMove;
+                    if (specialMove == SpecialMove.NORMAL) {
+                        if (chessBoard.getLastMove(0).deadPiece == null) {
+                            GameSounds.play(gameSound.moveSelfSound);
+                        } else {
+                            GameSounds.play(gameSound.captureSound);
+                        }
+                    } else if (specialMove == SpecialMove.CASTLE) {
+                        GameSounds.play(gameSound.captureSound);
+                    } else if (specialMove == SpecialMove.EN_PASSANT) {
+                        GameSounds.play(gameSound.captureSound);
+                    }
+                }
 
                 // play with bot => size > 1
                 // play with player => size > 0
@@ -620,7 +650,10 @@ public class GameController extends Controller {
             int[] endCell = getCell(localInOverlayPane.getX(), localInOverlayPane.getY());
 
             // Kích hoạt sự kiện
-            playCell(startCell.get()[0], startCell.get()[1], endCell[0], endCell[1], null);
+            boolean validMove = playCell(startCell.get()[0], startCell.get()[1], endCell[0], endCell[1], null);
+            if (validMove && isPreMove.get()) {
+                GameSounds.play(gameSound.premoveSound);
+            }
         });
     }
 
@@ -836,9 +869,14 @@ public class GameController extends Controller {
         }
     }
 
+    private void initSound() {
+        gameSound = new GameSounds();
+    }
+
     @FXML
     private void initialize() throws IOException {
         initSocket();
+        initSound();
         initChessBoard();
         initAdditionController();
     }

@@ -7,7 +7,7 @@
 
 <StackPane fx:id="mainStackPane" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.chessgame.Menu.MenuController">
    <children>
-      <VBox fx:id="menuBox" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="756.0" styleClass="main-box" stylesheets="@style.css">
+      <VBox fx:id="menuBox" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="522.0" prefWidth="960.0" styleClass="main-box" stylesheets="@style.css">
          <children>
             <VBox alignment="TOP_CENTER" prefHeight="97.0" prefWidth="600.0">
                <children>
@@ -17,7 +17,7 @@
             <JFXButton alignment="TOP_RIGHT" focusTraversable="false" onMouseClicked="#onPlayWithBotClicked" styleClass="menu-button" text="Play With Bot" />
             <JFXButton focusTraversable="false" onMouseClicked="#onTwoPlayerClicked" styleClass="menu-button" text="2 Player" />
             <JFXButton focusTraversable="false" styleClass="menu-button" text="Setting" />
-            <JFXButton focusTraversable="false" styleClass="menu-button" text="Exit" />
+            <JFXButton focusTraversable="false" onMouseClicked="#onExitClicked" styleClass="menu-button" text="Exit" />
          </children>
       </VBox>
    </children>

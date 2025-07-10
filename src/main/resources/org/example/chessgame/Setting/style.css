@@ -1,0 +1,21 @@
+.main-box {
+    -fx-background-image: url("images/background.jpg");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: cover; /* hoặc contain */
+    -fx-background-position: center center;
+
+    -fx-spacing: 10;
+}
+
+.jfx-slider {
+    -jfx-track-color: #cccccc;           /* màu track chưa kéo */
+    -jfx-filled-track-color: #2196F3;    /* màu phần đã kéo (volume hiện tại) */
+    -jfx-thumb-color: #2196F3;           /* màu chấm tròn */
+    -jfx-disabled-color: #999999;
+}
+
+.function-label {
+    -fx-font-family: "Arial Black", "Roboto Bold", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #FFFFFFDD;
+}

@@ -12,6 +12,8 @@ public class GameSocket {
     private SocketListener listener;
     private Process aiPythonProcess;
 
+    private volatile boolean running = true;
+
     public void runAiPython() throws IOException {
         // Lệnh chạy file Python
         ProcessBuilder processBuilder = new ProcessBuilder("python", "-m", "Play.game_socket");
@@ -116,7 +118,7 @@ public class GameSocket {
 
     private void receiveData() {
         try {
-            while (true) {
+            while (running) {
                 if (!in.ready()) { // 🔹 Kiểm tra xem có dữ liệu không
                     continue;
                 }
@@ -146,6 +148,7 @@ public class GameSocket {
     }
 
     public void close() {
+        running = false;
         try {
             if (socket != null && !socket.isClosed()) {
                 in.close();

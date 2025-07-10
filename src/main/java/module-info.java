@@ -3,6 +3,7 @@ module org.example.chessgame {
     requires javafx.fxml;
     requires java.desktop;
     requires org.json;
+    requires javafx.media;
 
 
     opens org.example.chessgame to javafx.fxml;
@@ -11,4 +12,6 @@ module org.example.chessgame {
     opens org.example.chessgame.GameBoard to javafx.fxml;
     exports org.example.chessgame.Menu;
     opens org.example.chessgame.Menu to javafx.fxml;
+    exports org.example.chessgame.Sound;
+    opens org.example.chessgame.Sound to javafx.fxml;
 }

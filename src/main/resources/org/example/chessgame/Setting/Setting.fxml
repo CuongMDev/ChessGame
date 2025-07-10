@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXSlider?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" styleClass="main-box" stylesheets="@style.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.chessgame.Menu.Setting.SettingController">
+   <children>
+      <Label layoutX="118.0" layoutY="117.0" styleClass="function-label" text="Thinking Ability:" />
+      <JFXSlider fx:id="thinkingAbilitySlider" layoutX="278.0" layoutY="121.0" prefHeight="14.0" prefWidth="222.0" />
+      <Label layoutX="118.0" layoutY="178.0" styleClass="function-label" text="Game Music:" />
+      <JFXSlider fx:id="gameMusicSlider" layoutX="278.0" layoutY="182.0" prefHeight="14.0" prefWidth="222.0" />
+   </children>
+</AnchorPane>

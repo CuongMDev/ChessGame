@@ -1,5 +1,6 @@
 package org.example.chessgame.Menu;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -19,7 +20,6 @@ public class MenuController extends Controller {
     @FXML
     VBox menuBox;
 
-    @FXML
     public void onPlayWithBotClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
             gameplayController.resetGameBoard(ChessBoard.STARTING_FEN);
@@ -27,9 +27,16 @@ public class MenuController extends Controller {
             getStage().sizeToScene();
         }
     }
+
     public void onTwoPlayerClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
             gameplayController.resetGameplay(false, true);
+        }
+    }
+
+    public void onExitClicked(MouseEvent mouseEvent) {
+        if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+            Platform.exit();
         }
     }
 

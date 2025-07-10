@@ -2,6 +2,7 @@ package org.example.chessgame.ChessObject;
 
 import org.example.chessgame.ChessObject.Move.Move;
 import org.example.chessgame.ChessObject.Move.PreMove;
+import org.example.chessgame.ChessObject.Move.SpecialMove;
 
 import java.util.*;
 
@@ -191,14 +192,14 @@ public class ChessBoard {
     public void setPromote(int endX, int endY, ChessPiece chessPiece) {
         moveChess(endX, endY, 0, 0, getLastMove(0).isPreMove);
         setChessPiece(endX, endY, chessPiece);
-        getLastMove(0).isSpecialMove = true;
+        getLastMove(0).specialMove = SpecialMove.PROMOTION;
     }
 
     /**
      * not check and just move chess piece
      */
     private void moveChess(int startX, int startY, int endX, int endY, boolean isPreMove) {
-        history.add(new Move(startX, startY, endX, endY, getChessPiece(endX, endY), false, isPreMove));
+        history.add(new Move(startX, startY, endX, endY, getChessPiece(endX, endY), SpecialMove.NORMAL, isPreMove));
 
         setChessPiece(endX, endY, getChessPiece(startX, startY));
         setChessPiece(startX, startY, null);
@@ -242,7 +243,7 @@ public class ChessBoard {
         }
         moves.add(lastMove);
 
-        if (lastMove.isSpecialMove) {
+        if (lastMove.specialMove != SpecialMove.NORMAL) {
             moves.add(rollbackOne());
         }
 
@@ -288,7 +289,7 @@ public class ChessBoard {
         return false;
     }
 
-    private boolean checkKingInCheck(ChessPiece.Team team) {
+    public boolean checkKingInCheck(ChessPiece.Team team) {
         int kingX = kingPosition[team.ordinal()][0];
         int kingY = kingPosition[team.ordinal()][1];
         return isUnderAttack(kingX, kingY, team);
@@ -349,7 +350,7 @@ public class ChessBoard {
             preMoveList.add(new PreMove(startX, startY, endX, endY));
         }
 
-        boolean specialMove = false;
+        SpecialMove specialMove = SpecialMove.NORMAL;
         // Kiểm tra nhập thành
         if (getChessPiece(startX, startY) instanceof King && Math.abs(endX - startX) == 2) {
             // Di chuyển xe
@@ -358,27 +359,27 @@ public class ChessBoard {
             } else {
                 moveChess(8, startY, startX + 1, endY, isPreMove);
             }
-            specialMove = true;
+            specialMove = SpecialMove.CASTLE;
         }
         // Kiểm tra bắt tốt qua đường
         int direction = (getChessPieceTeam(startX, startY) == ChessPiece.Team.WHITE) ? -1 : 1; // White moves up (-1), Black moves down (+1)
         if (getChessPiece(startX, startY) instanceof Pawn && Math.abs(startX - endX) == 1 && startY + direction == endY && !existChessPiece(endX, endY)) {
             if (existChessPiece(endX, endY - direction) && getChessPieceTeam(endX, endY - direction) != getChessPieceTeam(startX, startY)) {
                 moveChess(endX, endY - direction, 0, 0, isPreMove);
-                specialMove = true;
+                specialMove = SpecialMove.EN_PASSANT;
             }
         }
 
         moveChess(startX, startY, endX, endY, isPreMove);
 
-        if (specialMove) {
+        if (specialMove != SpecialMove.NORMAL) {
             // Đảo để đảm bảo move event nằm sau extra move
             Move moveEvent = history.pop();
             Move extraMove = history.pop();
             history.push(moveEvent);
             history.push(extraMove);
 
-            getLastMove(0).isSpecialMove = true;
+            getLastMove(0).specialMove = specialMove;
         }
     }
 }

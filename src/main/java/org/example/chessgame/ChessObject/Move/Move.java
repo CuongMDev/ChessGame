@@ -9,16 +9,16 @@ public class Move {
     public int endY;
 
     public ChessPiece deadPiece;
-    public boolean isSpecialMove;
+    public SpecialMove specialMove;
     public boolean isPreMove;
 
-    public Move(int startX, int startY, int endX, int endY, ChessPiece deadPiece, boolean isSpecialMove, boolean isPreMove) {
+    public Move(int startX, int startY, int endX, int endY, ChessPiece deadPiece, SpecialMove isSpecialMove, boolean isPreMove) {
         this.startX = startX;
         this.startY = startY;
         this.endX = endX;
         this.endY = endY;
         this.deadPiece = deadPiece;
-        this.isSpecialMove = isSpecialMove;
+        this.specialMove = isSpecialMove;
         this.isPreMove = isPreMove;
     }
 }

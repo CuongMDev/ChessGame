@@ -9,16 +9,23 @@ import org.example.chessgame.Menu.MenuController;
 import java.io.IOException;
 
 public class Main extends Application {
+    MenuController menuController;
+
     @Override
     public void start(Stage stage) throws IOException {
-        MenuController menuController = (MenuController) Controller.init(stage, getClass().getResource("Menu/Menu.fxml"));
+        menuController = (MenuController) Controller.init(stage, getClass().getResource("Menu/Menu.fxml"));
         stage.setTitle("Chess!");
         stage.setScene(menuController.getParent().getScene());
         stage.setResizable(false);
         stage.show();
         stage.setOnCloseRequest(event -> {
-            menuController.closeSocket();
         });
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        menuController.closeSocket();
     }
 
     public static void main(String[] args) {
