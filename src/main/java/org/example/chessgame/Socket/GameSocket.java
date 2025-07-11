@@ -110,6 +110,12 @@ public class GameSocket {
         out.println(jsonData);
     }
 
+    public void sendChangeThinkingAbilityData(double thinkingAbility) {
+        JSONObject jsonData = new JSONObject();
+        jsonData.put("thinking_ability", thinkingAbility);
+        out.println(jsonData);
+    }
+
     public void sendRollbackData() {
         JSONObject jsonData = new JSONObject();
         jsonData.put("rollback", 1);

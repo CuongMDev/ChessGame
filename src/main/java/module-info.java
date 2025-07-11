@@ -12,6 +12,8 @@ module org.example.chessgame {
     opens org.example.chessgame.GameBoard to javafx.fxml;
     exports org.example.chessgame.Menu;
     opens org.example.chessgame.Menu to javafx.fxml;
+    exports org.example.chessgame.Menu.Setting;
+    opens org.example.chessgame.Menu.Setting to javafx.fxml;
     exports org.example.chessgame.Sound;
     opens org.example.chessgame.Sound to javafx.fxml;
 }

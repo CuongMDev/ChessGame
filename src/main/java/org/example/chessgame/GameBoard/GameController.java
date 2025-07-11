@@ -46,7 +46,7 @@ public class GameController extends Controller {
     private ChessPiece.Team playerTurn;
     private ChessPiece.Team currentTurn;
 
-    GameSounds gameSound;
+    public GameSounds gameSound;
 
     private ChooseTeamController chooseTeamController;
     public GameResultController gameResultController;
@@ -322,7 +322,7 @@ public class GameController extends Controller {
         pause.setOnFinished(event -> {
             gameResultController.setResult(result);
             mainStackPane.getChildren().add(gameResultController.getParent());
-            GameSounds.play(gameSound.gameEndSound);
+            gameSound.gameEndSound.play();
         });
         pause.play();
     }
@@ -386,7 +386,7 @@ public class GameController extends Controller {
         }
         chessBoard.setPromote(x, y, promotionPiece);
 
-        GameSounds.play(gameSound.promotionSound);
+        gameSound.promotionSound.play();
 
         isPromoting = false;
     }
@@ -459,19 +459,19 @@ public class GameController extends Controller {
 
                 // play sound
                 if (chessBoard.checkKingInCheck(currentTurn)) {
-                    GameSounds.play(gameSound.moveCheckSound);
+                    gameSound.moveCheckSound.play();
                 } else if (!isPromoting) {
                     SpecialMove specialMove = chessBoard.getLastMove(0).specialMove;
                     if (specialMove == SpecialMove.NORMAL) {
                         if (chessBoard.getLastMove(0).deadPiece == null) {
-                            GameSounds.play(gameSound.moveSelfSound);
+                            gameSound.moveSelfSound.play();
                         } else {
-                            GameSounds.play(gameSound.captureSound);
+                            gameSound.captureSound.play();
                         }
                     } else if (specialMove == SpecialMove.CASTLE) {
-                        GameSounds.play(gameSound.captureSound);
+                        gameSound.captureSound.play();
                     } else if (specialMove == SpecialMove.EN_PASSANT) {
-                        GameSounds.play(gameSound.captureSound);
+                        gameSound.captureSound.play();
                     }
                 }
 
@@ -652,7 +652,7 @@ public class GameController extends Controller {
             // Kích hoạt sự kiện
             boolean validMove = playCell(startCell.get()[0], startCell.get()[1], endCell[0], endCell[1], null);
             if (validMove && isPreMove.get()) {
-                GameSounds.play(gameSound.premoveSound);
+                gameSound.premoveSound.play();
             }
         });
     }
@@ -762,6 +762,10 @@ public class GameController extends Controller {
                 : (currentTurn == ChessPiece.Team.WHITE ? ChessPiece.Team.BLACK : ChessPiece.Team.WHITE);
 
         gameSocket.sendResetData(humanPlayFirst, chessBoard.getInitFen());
+    }
+
+    public void setThinkingAbility(double thinkingAbility) {
+        gameSocket.sendChangeThinkingAbilityData(thinkingAbility);
     }
 
     private void addNumOrder() {

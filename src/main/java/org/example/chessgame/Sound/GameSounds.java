@@ -1,53 +1,35 @@
 package org.example.chessgame.Sound;
 
-import javax.sound.sampled.AudioInputStream;
-
-import javax.sound.sampled.*;
-import java.io.IOException;
-import java.net.URL;
+import javafx.scene.media.AudioClip;
 
 public class GameSounds {
-    public final Clip captureSound;
-    public final Clip moveSelfSound;
-    public final Clip castleSound;
-    public final Clip moveCheckSound;
-    public final Clip promotionSound;
-    public final Clip premoveSound;
-    public final Clip gameEndSound;
+    public final AudioClip captureSound;
+    public final AudioClip moveSelfSound;
+    public final AudioClip castleSound;
+    public final AudioClip moveCheckSound;
+    public final AudioClip promotionSound;
+    public final AudioClip premoveSound;
+    public final AudioClip gameEndSound;
 
     public GameSounds() {
-        captureSound = loadClip("GameSounds/capture.wav");
-        moveSelfSound = loadClip("GameSounds/move-self.wav");
-        castleSound = loadClip("GameSounds/castle.wav");
-        moveCheckSound = loadClip("GameSounds/move-check.wav");
-        promotionSound = loadClip("GameSounds/promote.wav");
-        premoveSound = loadClip("GameSounds/premove.wav");
-        gameEndSound = loadClip("GameSounds/game-end.wav");
+        captureSound = new AudioClip(getClass().getResource("GameSounds/capture.wav").toExternalForm());
+        moveSelfSound = new AudioClip(getClass().getResource("GameSounds/move-self.wav").toExternalForm());
+        castleSound = new AudioClip(getClass().getResource("GameSounds/castle.wav").toExternalForm());
+        moveCheckSound = new AudioClip(getClass().getResource("GameSounds/move-check.wav").toExternalForm());
+        promotionSound = new AudioClip(getClass().getResource("GameSounds/promote.wav").toExternalForm());
+        premoveSound = new AudioClip(getClass().getResource("GameSounds/premove.wav").toExternalForm());
+        gameEndSound = new AudioClip(getClass().getResource("GameSounds/game-end.wav").toExternalForm());
     }
 
-    private static Clip loadClip(String resourcePath) {
-        try {
-            URL url = GameSounds.class.getResource(resourcePath);
-            if (url == null) {
-                System.err.println("File not found: " + resourcePath);
-                return null;
-            }
+    public void setVolume(double volume) {
+        volume /= 100;
 
-            AudioInputStream audioIn = AudioSystem.getAudioInputStream(url);
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioIn);
-            return clip;
-        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public static void play(Clip clip) {
-        if (clip != null) {
-            if (clip.isRunning()) clip.stop(); // tránh xung đột
-            clip.setFramePosition(0);          // quay về đầu
-            clip.start();
-        }
+        captureSound.setVolume(volume);
+        moveSelfSound.setVolume(volume);
+        castleSound.setVolume(volume);
+        moveCheckSound.setVolume(volume);
+        promotionSound.setVolume(volume);
+        premoveSound.setVolume(volume);
+        gameEndSound.setVolume(volume);
     }
 }
