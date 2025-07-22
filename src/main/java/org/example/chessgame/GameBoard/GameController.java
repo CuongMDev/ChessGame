@@ -189,8 +189,8 @@ public class GameController extends Controller {
 
         boolean isPreMove = chessBoard.getChessPieceTeam(startX, startY) != currentTurn;
         if (handleMoveEvent(startX, startY, endX, endY, promotionPiece)) {
+            current_moveUCI = Character.toString(startX - 1 + 'a') + (9 - startY) + (char) (endX - 1 + 'a') + (9 - endY);
             if (!isPromoting && !isPreMove) {
-                current_moveUCI = Character.toString(startX - 1 + 'a') + (9 - startY) + (char) (endX - 1 + 'a') + (9 - endY);
                 if (promotionPiece != null) {
                     switch (promotionPiece) {
                         case Queen _ -> current_moveUCI += 'q';
@@ -737,12 +737,10 @@ public class GameController extends Controller {
         }
     }
 
-    public void resetGameBoard(String fen) {
+    public void resetGameBoard(boolean playWithBot, String fen) {
         while (mainStackPane.getChildren().size() > 1) {
             mainStackPane.getChildren().removeLast();
         }
-        mainStackPane.getChildren().add(chooseTeamController.getParent());
-        gameBox.setDisable(true);
 
         this.isPromoting = false;
         this.gameOver = false;
@@ -753,19 +751,27 @@ public class GameController extends Controller {
         highlightLastMoveEvent(true);
         this.currentTurn = chessBoard.initChessBoard(fen);
 
+        if (playWithBot) {
+            mainStackPane.getChildren().add(chooseTeamController.getParent());
+            gameBox.setDisable(true);
+        } else {
+            resetGameplay(false, true);
+            gameBox.setDisable(false);
+        }
+
         refresh();
     }
 
-    public void resetGameplay(boolean playWithBot, boolean humanPlayFirst) {
+    private void resetGameplay(boolean playWithBot, boolean humanPlayFirst) {
         this.playWithBot = playWithBot;
         this.playerTurn = humanPlayFirst ? currentTurn
                 : (currentTurn == ChessPiece.Team.WHITE ? ChessPiece.Team.BLACK : ChessPiece.Team.WHITE);
 
-        gameSocket.sendResetData(humanPlayFirst, chessBoard.getInitFen());
+        gameSocket.sendResetData(playWithBot, humanPlayFirst, chessBoard.getInitFen());
     }
 
-    public void setThinkingAbility(double thinkingAbility) {
-        gameSocket.sendChangeThinkingAbilityData(thinkingAbility);
+    public void setThinkingAbility(double thinkingAbility, double searchThread) {
+        gameSocket.sendChangeThinkingAbilityData(thinkingAbility, searchThread);
     }
 
     private void addNumOrder() {
@@ -819,7 +825,7 @@ public class GameController extends Controller {
     }
 
     private void initAdditionController() throws IOException {
-        chooseTeamController = (ChooseTeamController) Controller.init(getStage(), getClass().getResource("ChooseTeam/chooseTeam.fxml"));
+        chooseTeamController = (ChooseTeamController) Controller.init(getStage(), getClass().getResource("ChooseTeam/ChooseTeam.fxml"));
         chooseTeamController.whiteButton.setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getButton() == MouseButton.PRIMARY) {
                 resetGameplay(true, true);
@@ -835,14 +841,14 @@ public class GameController extends Controller {
             }
         });
 
-        gameResultController = (GameResultController) Controller.init(getStage(), getClass().getResource("gameResult/gameResult.fxml"));
+        gameResultController = (GameResultController) Controller.init(getStage(), getClass().getResource("GameResult/GameResult.fxml"));
         mainStackPane.getChildren().add(gameResultController.getParent()); // avoid lagging
         mainStackPane.getChildren().removeLast();
         gameResultController.rematchButton.setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getButton() == MouseButton.PRIMARY) {
                 mainStackPane.getChildren().removeLast();
 
-                resetGameBoard(ChessBoard.STARTING_FEN);
+                resetGameBoard(playWithBot, ChessBoard.STARTING_FEN);
             }
         });
     }

@@ -2,8 +2,9 @@ module org.example.chessgame {
     requires javafx.controls;
     requires javafx.fxml;
     requires java.desktop;
-    requires org.json;
     requires javafx.media;
+    requires com.google.gson;
+    requires com.jfoenix;
 
 
     opens org.example.chessgame to javafx.fxml;

@@ -25,8 +25,8 @@ public class MenuController extends Controller {
     @FXML
     private void onPlayWithBotClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-            gameplayController.resetGameBoard(ChessBoard.STARTING_FEN);
-            gameplayController.setThinkingAbility(settingController.thinkingAbilitySlider.getValue());
+            gameplayController.resetGameBoard(true, ChessBoard.STARTING_FEN);
+            gameplayController.setThinkingAbility(settingController.thinkingAbilitySlider.getValue(), settingController.searchThreadSlider.getValue());
             gameplayController.gameSound.setVolume(settingController.gameMusicSlider.getValue());
             mainStackPane.getChildren().setAll(gameplayController.getParent());
             getStage().sizeToScene();
@@ -37,7 +37,9 @@ public class MenuController extends Controller {
     private void onTwoPlayerClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
             gameplayController.gameSound.setVolume((int) settingController.gameMusicSlider.getValue());
-            gameplayController.resetGameplay(false, true);
+            gameplayController.resetGameBoard(false, ChessBoard.STARTING_FEN);
+            mainStackPane.getChildren().setAll(gameplayController.getParent());
+            getStage().sizeToScene();
         }
     }
 

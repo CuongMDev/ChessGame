@@ -1,9 +1,13 @@
 package org.example.chessgame.Socket;
 
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class GameSocket {
     private Socket socket;
@@ -12,12 +16,28 @@ public class GameSocket {
     private SocketListener listener;
     private Process aiPythonProcess;
 
+    private final Gson gson = new Gson();
+
     private volatile boolean running = true;
 
     public void runAiPython() throws IOException {
+        ProcessBuilder processBuilder;
+
         // Lệnh chạy file Python
-        ProcessBuilder processBuilder = new ProcessBuilder("python", "-m", "Play.game_socket");
-        processBuilder.directory(new File("C:\\Users\\mcuon\\PycharmProjects\\ChessProject\\"));
+        String mode = System.getProperty("mode", "release");
+        if ("debug".equalsIgnoreCase(mode)) {
+            processBuilder = new ProcessBuilder("python", "-m", "Play.game_socket");
+            processBuilder.directory(new File("C:\\Users\\mcuon\\PycharmProjects\\ChessProject\\"));
+        }
+        else {
+            Path currentDir = Paths.get(System.getProperty("user.dir"));
+            Path exePath = currentDir.resolve("runtime").resolve("GameProcess").resolve("game_socket").resolve("game_socket.exe");
+            if (!exePath.toFile().exists()) {
+                exePath = currentDir.resolve("GameProcess").resolve("game_socket").resolve("game_socket.exe");
+            }
+            processBuilder = new ProcessBuilder(exePath.toString());
+            processBuilder.directory(exePath.getParent().toFile());
+        }
         // Chạy tiến trình
         aiPythonProcess = processBuilder.start();
 
@@ -97,53 +117,56 @@ public class GameSocket {
     }
 
     public void sendMoveData(String moveUCI) {
-        JSONObject jsonData = new JSONObject();
-        jsonData.put("move_uci", moveUCI);
-        out.println(jsonData);
+        JsonObject jsonData = new JsonObject();
+        jsonData.addProperty("move_uci", moveUCI);
+        out.println(gson.toJson(jsonData));
     }
 
-    public void sendResetData(boolean humanPlayFirst, String fen) {
-        JSONObject jsonData = new JSONObject();
-        jsonData.put("reset", 1);
-        jsonData.put("human_play_first", humanPlayFirst);
-        jsonData.put("fen", fen);
-        out.println(jsonData);
+    public void sendResetData(boolean playWithBot, boolean humanPlayFirst, String fen) {
+        JsonObject jsonData = new JsonObject();
+        jsonData.addProperty("reset", 1);
+        jsonData.addProperty("play_with_bot", playWithBot);
+        jsonData.addProperty("human_play_first", humanPlayFirst);
+        jsonData.addProperty("fen", fen);
+        out.println(gson.toJson(jsonData));
     }
 
-    public void sendChangeThinkingAbilityData(double thinkingAbility) {
-        JSONObject jsonData = new JSONObject();
-        jsonData.put("thinking_ability", thinkingAbility);
-        out.println(jsonData);
+    public void sendChangeThinkingAbilityData(double thinkingAbility, double searchThread) {
+        JsonObject jsonData = new JsonObject();
+        jsonData.addProperty("thinking_ability", thinkingAbility);
+        jsonData.addProperty("search_thread", searchThread);
+        out.println(gson.toJson(jsonData));
     }
 
     public void sendRollbackData() {
-        JSONObject jsonData = new JSONObject();
-        jsonData.put("rollback", 1);
-        out.println(jsonData);
+        JsonObject jsonData = new JsonObject();
+        jsonData.addProperty("rollback", 1);
+        out.println(gson.toJson(jsonData));
     }
 
     private void receiveData() {
         try {
             while (running) {
-                if (!in.ready()) { // 🔹 Kiểm tra xem có dữ liệu không
+                if (!in.ready()) {
                     continue;
                 }
+
                 String response = in.readLine();
                 if (response == null) break;
 
-                JSONObject jsonResponse = new JSONObject(response);
+                JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
 
                 if (jsonResponse.has("move_uci") && jsonResponse.has("can_draw") && jsonResponse.has("result")) {
-                    String moveUCI = jsonResponse.isNull("move_uci") ? null : jsonResponse.getString("move_uci");
-                    boolean canDraw = jsonResponse.getBoolean("can_draw");
-                    String result = jsonResponse.getString("result");
+                    String moveUCI = jsonResponse.get("move_uci").isJsonNull() ? null : jsonResponse.get("move_uci").getAsString();
+                    boolean canDraw = jsonResponse.get("can_draw").getAsBoolean();
+                    String result = jsonResponse.get("result").getAsString();
 
                     if (listener != null) {
-                        listener.onMoveReceived(moveUCI, canDraw, result); // Gọi event
+                        listener.onMoveReceived(moveUCI, canDraw, result);
                     }
-                } else {
+                } else if (jsonResponse.has("error")) {
                     if (listener != null) {
-                        listener.onError("Lỗi từ server: " + jsonResponse.getString("error"));
+                        listener.onError("Lỗi từ server: " + jsonResponse.get("error").getAsString());
                     }
                 }
             }
