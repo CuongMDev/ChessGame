@@ -26,7 +26,6 @@ import org.example.chessgame.ChessObject.Move.SpecialMove;
 import org.example.chessgame.Socket.GameSocket;
 import org.example.chessgame.Socket.SocketListener;
 import org.example.chessgame.Sound.GameSounds;
-import org.example.chessgame.Sound.GameSounds;
 
 import java.io.IOException;
 import java.util.List;
@@ -45,6 +44,7 @@ public class GameController extends Controller {
     private Pane overlayPane;
     private ChessPiece.Team playerTurn;
     private ChessPiece.Team currentTurn;
+    private ChessPiece.Team teamPerspective;
 
     public GameSounds gameSound;
 
@@ -179,6 +179,10 @@ public class GameController extends Controller {
 
         int x = (int)(posX / cellWidth);
         int y = (int)(posY / cellHeight);
+        if (teamPerspective == ChessPiece.Team.BLACK) {
+            x = 9 - x;
+            y = 9 - y;
+        }
         return new int[]{x, y};
     }
 
@@ -257,7 +261,7 @@ public class GameController extends Controller {
     }
 
     private Pane getPaneFromGridPane(int column, int row) {
-        return chessBoardPane[row][column];
+        return teamPerspective == ChessPiece.Team.WHITE ? chessBoardPane[row][column] : chessBoardPane[9 - row][9 - column];
     }
 
     private Pane getPaneFromGridPane(ImageView imageView) {
@@ -668,8 +672,9 @@ public class GameController extends Controller {
             }
 
             Pane cell = (Pane) node;
-            if (chessBoard.existChessPiece(x, y)) {
-                ImageView chessImage = chessBoard.getChessPiece(x, y).getChessImage();
+            ChessPiece chessPiece = (teamPerspective == ChessPiece.Team.WHITE) ? chessBoard.getChessPiece(x, y) : chessBoard.getChessPiece(9 - x, 9 - y);
+            if (chessPiece != null) {
+                ImageView chessImage = chessPiece.getChessImage();
 
                 Utils.setImageToCell(cell, chessImage);
 
@@ -731,7 +736,7 @@ public class GameController extends Controller {
                     }
                 }
 
-                chessBoardBox.add(cell, col, row); // Add to GridPane
+                chessBoardBox.add(cell, col, row);
                 chessBoardPane[row][col] = cell;
             }
         }
@@ -755,19 +760,23 @@ public class GameController extends Controller {
             mainStackPane.getChildren().add(chooseTeamController.getParent());
             gameBox.setDisable(true);
         } else {
-            resetGameplay(false, true);
+            resetGameplay(false, this.currentTurn, ChessPiece.Team.WHITE);
             gameBox.setDisable(false);
         }
 
+        teamPerspective = ChessPiece.Team.WHITE;
         refresh();
     }
 
-    private void resetGameplay(boolean playWithBot, boolean humanPlayFirst) {
+    private void resetGameplay(boolean playWithBot, ChessPiece.Team humanTeam, ChessPiece.Team teamPerspective) {
         this.playWithBot = playWithBot;
-        this.playerTurn = humanPlayFirst ? currentTurn
-                : (currentTurn == ChessPiece.Team.WHITE ? ChessPiece.Team.BLACK : ChessPiece.Team.WHITE);
+        this.playerTurn = humanTeam;
+        this.teamPerspective = teamPerspective;
+        if (teamPerspective == ChessPiece.Team.BLACK) {
+            refresh();
+        }
 
-        gameSocket.sendResetData(playWithBot, humanPlayFirst, chessBoard.getInitFen());
+        gameSocket.sendResetData(playWithBot, !playWithBot || (humanTeam == this.currentTurn), chessBoard.getInitFen());
     }
 
     public void setThinkingAbility(double thinkingAbility, double searchThread) {
@@ -778,8 +787,8 @@ public class GameController extends Controller {
         final String numLabelStyle = "-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #9e7357;";
 
         for (int row = 1; row <= 8; row++) {
-            Label numLabel1 = new Label(String.valueOf((char) ('a' + row - 1)));
-            Label numLabel2 = new Label(String.valueOf((char) ('a' + row - 1)));
+            Label numLabel1 = new Label(String.valueOf((char) (teamPerspective == ChessPiece.Team.WHITE ? 'a' + row - 1 : 'a' + 8 - row)));
+            Label numLabel2 = new Label(String.valueOf((char) (teamPerspective == ChessPiece.Team.WHITE ? 'a' + row - 1 : 'a' + 8 - row)));
             numLabel1.setStyle(numLabelStyle);
             numLabel2.setStyle(numLabelStyle);
             VBox vbox1 = new VBox(numLabel1);
@@ -787,8 +796,8 @@ public class GameController extends Controller {
             vbox1.setAlignment(Pos.BOTTOM_CENTER);
             vbox2.setAlignment(Pos.TOP_CENTER);
 
-            Pane pane1 = getPaneFromGridPane(row, 0);
-            Pane pane2 = getPaneFromGridPane(row, 9);
+            Pane pane1 = chessBoardPane[0][row];
+            Pane pane2 = chessBoardPane[9][row];
 
             vbox1.prefHeightProperty().bind(pane1.heightProperty());
             vbox1.prefWidthProperty().bind(pane1.widthProperty());
@@ -801,8 +810,8 @@ public class GameController extends Controller {
         }
 
         for (int col = 1; col <= 8; col++) {
-            Label numLabel1 = new Label((9 - col) + " ");
-            Label numLabel2 = new Label(" " + (9 - col));
+            Label numLabel1 = new Label((teamPerspective == ChessPiece.Team.WHITE ? 9 - col : col - 1) + " ");
+            Label numLabel2 = new Label(" " + (teamPerspective == ChessPiece.Team.WHITE ? 9 - col : col - 1));
             numLabel1.setStyle(numLabelStyle);
             numLabel2.setStyle(numLabelStyle);
             HBox vbox1 = new HBox(numLabel1);
@@ -810,8 +819,8 @@ public class GameController extends Controller {
             vbox1.setAlignment(Pos.CENTER_RIGHT);
             vbox2.setAlignment(Pos.CENTER_LEFT);
 
-            Pane pane1 = getPaneFromGridPane(0, col);
-            Pane pane2 = getPaneFromGridPane(9, col);
+            Pane pane1 = chessBoardPane[col][0];
+            Pane pane2 = chessBoardPane[col][9];
 
             vbox1.prefHeightProperty().bind(pane1.heightProperty());
             vbox1.prefWidthProperty().bind(pane1.widthProperty());
@@ -828,14 +837,14 @@ public class GameController extends Controller {
         chooseTeamController = (ChooseTeamController) Controller.init(getStage(), getClass().getResource("ChooseTeam/ChooseTeam.fxml"));
         chooseTeamController.whiteButton.setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-                resetGameplay(true, true);
+                resetGameplay(true, ChessPiece.Team.WHITE, ChessPiece.Team.WHITE);
                 mainStackPane.getChildren().removeLast();
                 gameBox.setDisable(false);
             }
         });
         chooseTeamController.blackButton.setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-                resetGameplay(true, false);
+                resetGameplay(true, ChessPiece.Team.BLACK, ChessPiece.Team.BLACK);
                 mainStackPane.getChildren().removeLast();
                 gameBox.setDisable(false);
             }

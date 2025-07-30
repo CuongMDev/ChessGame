@@ -132,6 +132,60 @@ public class ChessBoard {
         return currentTurn;
     }
 
+    public static boolean isValidFEN(String fen) {
+        if (fen == null) return false;
+
+        String[] parts = fen.trim().split(" ");
+        if (parts.length != 6) return false;
+
+        // 1. Kiểm tra phần bàn cờ
+        String[] rows = parts[0].split("/");
+        if (rows.length != 8) return false;
+
+        for (String row : rows) {
+            int count = 0;
+            for (char ch : row.toCharArray()) {
+                if (Character.isDigit(ch)) {
+                    int empty = ch - '0';
+                    if (empty < 1 || empty > 8) return false;
+                    count += empty;
+                } else if ("prnbqkPRNBQK".indexOf(ch) >= 0) {
+                    count++;
+                } else {
+                    return false; // ký tự không hợp lệ
+                }
+            }
+            if (count != 8) return false; // mỗi hàng phải có đúng 8 ô
+        }
+
+        // 2. Lượt đi: w hoặc b
+        if (!parts[1].equals("w") && !parts[1].equals("b")) return false;
+
+        // 3. Nhập thành: chỉ chứa các ký tự KQkq hoặc -
+        if (!parts[2].matches("[-KQkq]+")) return false;
+
+        // 4. En passant: là "-" hoặc ô hợp lệ
+        if (!parts[3].equals("-") && !parts[3].matches("^[a-h][36]$")) return false;
+
+        // 5. Halfmove: số nguyên không âm
+        try {
+            int halfmove = Integer.parseInt(parts[4]);
+            if (halfmove < 0) return false;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+
+        // 6. Fullmove: số nguyên ≥ 1
+        try {
+            int fullmove = Integer.parseInt(parts[5]);
+            if (fullmove < 1) return false;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      *
      * @param fen

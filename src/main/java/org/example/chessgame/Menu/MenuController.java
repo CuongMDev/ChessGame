@@ -2,6 +2,7 @@ package org.example.chessgame.Menu;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
@@ -18,14 +19,44 @@ public class MenuController extends Controller {
     SettingController settingController;
 
     @FXML
+    TextField fenTextField;
+    @FXML
     StackPane mainStackPane;
     @FXML
     VBox menuBox;
 
+    private boolean checkValidFen() {
+        String fen = fenTextField.getText();
+        if (fen.isEmpty()) {
+            fenTextField.getStyleClass().remove("invalid");
+            return true;
+        }
+        if (ChessBoard.isValidFEN(fen)) {
+            fenTextField.getStyleClass().remove("invalid");
+            return true;
+        }
+
+        if (!fenTextField.getStyleClass().contains("invalid")) {
+            fenTextField.getStyleClass().add("invalid");
+        }
+        return false;
+    }
+
+    private String getFen() {
+        String fen = fenTextField.getText();
+        if (fen.isEmpty()) {
+            fen = ChessBoard.STARTING_FEN;
+        }
+        return fen;
+    }
+
     @FXML
     private void onPlayWithBotClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-            gameplayController.resetGameBoard(true, ChessBoard.STARTING_FEN);
+            if (!checkValidFen()) {
+                return;
+            }
+            gameplayController.resetGameBoard(true, getFen());
             gameplayController.setThinkingAbility(settingController.thinkingAbilitySlider.getValue(), settingController.searchThreadSlider.getValue());
             gameplayController.gameSound.setVolume(settingController.gameMusicSlider.getValue());
             mainStackPane.getChildren().setAll(gameplayController.getParent());
@@ -36,8 +67,11 @@ public class MenuController extends Controller {
     @FXML
     private void onTwoPlayerClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+            if (!checkValidFen()) {
+                return;
+            }
             gameplayController.gameSound.setVolume((int) settingController.gameMusicSlider.getValue());
-            gameplayController.resetGameBoard(false, ChessBoard.STARTING_FEN);
+            gameplayController.resetGameBoard(false, getFen());
             mainStackPane.getChildren().setAll(gameplayController.getParent());
             getStage().sizeToScene();
         }

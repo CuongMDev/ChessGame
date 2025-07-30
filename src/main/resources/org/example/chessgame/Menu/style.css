@@ -22,6 +22,27 @@
     -fx-alignment: center;
 }
 
+.fen_import {
+    -fx-background-color: linear-gradient(to bottom, #1d3557, #0b2545); /* Make background transparent */
+    -fx-text-fill: White;
+    -fx-border-color: #cccccc; /* Add a line under the TextField */
+    -fx-border-width: 0 0 1px 0; /* Set the width of the bottom border (underline) */
+    -fx-padding: 5px; /* Padding to control spacing */
+    -fx-max-width: 300px;
+}
+
+.fen_import.invalid {
+    -fx-border-color: #ff6363;
+}
+
+.fen_import.invalid:focused {
+    -fx-border-color: red;
+}
+
+.fen_import:focused {
+    -fx-border-color: #bab8b8;
+}
+
 .menu-button {
     -fx-background-color: linear-gradient(to bottom, #1d3557, #0b2545); /* Xanh navy đậm */
     -fx-text-fill: white;

@@ -2,6 +2,7 @@
 
 <?import com.jfoenix.controls.JFXButton?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -14,6 +15,7 @@
                   <Label prefHeight="91.0" prefWidth="512.0" styleClass="chess-title" text="Chess Game With AI" />
                </children>
             </VBox>
+            <TextField fx:id="fenTextField" alignment="CENTER" focusTraversable="false" prefWidth="795.0" promptText="Input FEN (leave blank for starting position)" styleClass="fen_import" />
             <JFXButton alignment="TOP_RIGHT" focusTraversable="false" onMouseClicked="#onPlayWithBotClicked" styleClass="menu-button" text="Play With Bot" />
             <JFXButton focusTraversable="false" onMouseClicked="#onTwoPlayerClicked" styleClass="menu-button" text="2 Player" />
             <JFXButton focusTraversable="false" onMouseClicked="#onSettingClicked" styleClass="menu-button" text="Setting" />
