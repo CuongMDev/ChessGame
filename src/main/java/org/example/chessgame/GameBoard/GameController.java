@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -241,7 +242,7 @@ public class GameController extends Controller {
             }
 
             if (promotionPiece != null) {
-                addDragEvent(promotionPiece.getChessImage());
+                addChessPieceEvents(promotionPiece.getChessImage());
             }
             handleMoveEvent(startX, startY, endX, endY, promotionPiece);
         }
@@ -343,7 +344,11 @@ public class GameController extends Controller {
         for (int i = 0; i < 4; i++) {
             // Phần pane trắng
             Pane promotionPane = new Pane();
-            promotionPane.setStyle("-fx-background-color: white;");
+            promotionPane.setStyle(
+                    "-fx-background-color: white;" +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0.5, 3, 3);"
+            );
+
             promotionPane.prefWidthProperty().bind(chessPanes[i].widthProperty());
             promotionPane.prefHeightProperty().bind(chessPanes[i].heightProperty());
 
@@ -353,6 +358,12 @@ public class GameController extends Controller {
             Utils.setImageToCell(promotionPane, promotionChessImage);
             chessPanes[i].getChildren().add(promotionPane);
 
+            // Các events chuột
+            // Hover vào ảnh -> hiện bàn tay mở
+            promotionChessImage.setOnMouseEntered(_ -> promotionChessImage.setCursor(Cursor.HAND));
+            // Rời chuột khỏi ảnh -> về mặc định
+            promotionChessImage.setOnMouseExited(_ -> promotionChessImage.setCursor(Cursor.DEFAULT));
+
             // Thêm sự kiện phong
             promotionChessImage.setOnMousePressed(event -> {
                 // Kiểm tra chuột trái
@@ -361,7 +372,7 @@ public class GameController extends Controller {
                 }
 
                 setPromotionPiece(endX, endY, promotionPiece);
-                addDragEvent(promotionChessImage);
+                addChessPieceEvents(promotionChessImage);
 
                 if (isPreMove) {
                     chessBoard.getLastPreMove(0).promotedPiece = promotionPiece;
@@ -510,7 +521,7 @@ public class GameController extends Controller {
         }
     }
 
-    private void addDragEvent(ImageView image) {
+    private void addChessPieceEvents(ImageView image) {
         // Tạo event kéo thả
         // Sự kiện nhấn chuột để lưu vị trí bắt đầu
         AtomicReference<int[]> startCell = new AtomicReference<>();
@@ -518,6 +529,12 @@ public class GameController extends Controller {
         AtomicReference<int[]> currentCell = new AtomicReference<>();
         AtomicReference<Boolean> isPreMove = new AtomicReference<>();
         AtomicInteger mouseStage = new AtomicInteger(); // 0: chưa chọn, 1: đang kéo
+
+        // Hover vào ảnh -> hiện bàn tay mở
+        image.setOnMouseEntered(_ -> image.setCursor(Cursor.OPEN_HAND));
+        // Rời chuột khỏi ảnh -> về mặc định
+        image.setOnMouseExited(_ -> image.setCursor(Cursor.DEFAULT));
+
         // Sự kiện bấm chuột
         image.setOnMousePressed(event -> {
             // Sự kiện chọn
@@ -547,6 +564,9 @@ public class GameController extends Controller {
                 ImageView copyImage = Utils.copyImageView(containPane.get(), image);
                 copyImage.setOpacity(0.3); // Làm mờ
                 containPane.get().getChildren().setAll(copyImage); // Đổi sang copy image
+
+                // Khi nhấn giữ chuột -> bàn tay đóng
+                image.setCursor(Cursor.CLOSED_HAND);
 
                 currentChooseImage = image;
                 currentCopyChooseImage = copyImage;
@@ -678,7 +698,7 @@ public class GameController extends Controller {
 
                 Utils.setImageToCell(cell, chessImage);
 
-                addDragEvent(chessImage);
+                addChessPieceEvents(chessImage);
             } else {
                 cell.getChildren().clear();
             }
