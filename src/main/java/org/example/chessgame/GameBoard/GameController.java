@@ -473,7 +473,7 @@ public class GameController extends Controller {
                             gameSound.captureSound.play();
                         }
                     } else if (specialMove == SpecialMove.CASTLE) {
-                        gameSound.captureSound.play();
+                        gameSound.castleSound.play();
                     } else if (specialMove == SpecialMove.EN_PASSANT) {
                         gameSound.captureSound.play();
                     }
@@ -728,7 +728,7 @@ public class GameController extends Controller {
                 Pane cell = new Pane(); // Create new cell
 
                 if (1 <= row && row <= 8 && 1 <= col && col <= 8) {
-                    // if (row + col) even, color red
+                    // if (row + col) even, color light
                     if ((row + col) % 2 == 0) {
                         cell.setStyle("-fx-background-color: #eeeed2;");
                     } else {
