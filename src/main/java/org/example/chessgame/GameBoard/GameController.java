@@ -30,6 +30,7 @@ import org.example.chessgame.Sound.GameSounds;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -61,6 +62,7 @@ public class GameController extends Controller {
 
     private boolean gameOver;
     private boolean playWithBot;
+    private String save_result;
 
     // promotion
     boolean isPromoting;
@@ -315,6 +317,7 @@ public class GameController extends Controller {
     }
 
     private void onGameOver(String result) {
+        save_result = result;
         gameOver = true;
         rollbackAndClearAllPreMoves();
         rollbackButton.setDisable(true);
@@ -880,6 +883,10 @@ public class GameController extends Controller {
                 resetGameBoard(playWithBot, ChessBoard.STARTING_FEN);
             }
         });
+
+        gameResultController.copyPGNButton.setOnMouseClicked(mouseEvent -> {
+            gameSocket.sendRequirePGNData();
+        });
     }
 
     public void initSocket() {
@@ -888,6 +895,18 @@ public class GameController extends Controller {
             @Override
             public void onMoveReceived(String moveUCI, boolean canDraw, String result) {
                 Platform.runLater(() -> emitReceiveEvent(moveUCI, canDraw, result));
+            }
+
+            @Override
+            public void onPGNReceived(String pgn) {
+                if (save_result.equals("Draw")) {
+                    pgn = Utils.addResultToPGN(pgn, "1/2-1/2");
+                } else if (save_result.equals("White-Win")) {
+                    pgn = Utils.addResultToPGN(pgn, "1-0");
+                } else {
+                    pgn = Utils.addResultToPGN(pgn, "0-1");
+                }
+                Utils.copyToClipBoard(pgn);
             }
 
             @Override

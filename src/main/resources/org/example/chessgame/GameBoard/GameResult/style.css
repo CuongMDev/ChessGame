@@ -48,3 +48,30 @@
     -fx-background-color: linear-gradient(to bottom, #2e7d32, #1b5e20); /* nhấn đậm hơn */
     -fx-translate-y: 1;
 }
+
+.chess-copy-button {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+
+    -fx-background-color: linear-gradient(to bottom, #f5f5f5, #e0e0e0); /* nền xám nhạt */
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #bdbdbd;
+    -fx-border-width: 1;
+
+    -fx-padding: 8 20;
+    -fx-cursor: hand;
+
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0.1, 0, 1); /* bóng nhẹ */
+}
+
+.chess-copy-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #eeeeee, #d5d5d5); /* hover sáng hơn */
+}
+
+.chess-copy-button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #cccccc, #b3b3b3); /* nhấn đậm hơn */
+    -fx-translate-y: 1;
+}

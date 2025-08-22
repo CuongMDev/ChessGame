@@ -9,5 +9,6 @@
       <JFXButton fx:id="rematchButton" focusTraversable="false" layoutX="185.0" layoutY="285.0" prefHeight="31.0" prefWidth="106.0" styleClass="chess-action-button" text="Rematch" />
       <JFXButton fx:id="exitToMenuButton" focusTraversable="false" layoutX="24.0" layoutY="285.0" prefHeight="29.0" prefWidth="106.0" styleClass="chess-action-button" text="Exit to Menu" />
       <Label fx:id="resultLabel" alignment="CENTER" layoutX="95.0" layoutY="104.0" prefHeight="65.0" prefWidth="125.0" styleClass="result-title" text="White-win" />
+      <JFXButton fx:id="copyPGNButton" focusTraversable="false" layoutX="105.0" layoutY="332.0" prefHeight="14.0" prefWidth="106.0" styleClass="chess-copy-button" text="Copy PGN" />
    </children>
 </AnchorPane>

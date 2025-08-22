@@ -144,6 +144,12 @@ public class GameSocket {
         out.println(gson.toJson(jsonData));
     }
 
+    public void sendRequirePGNData() {
+        JsonObject jsonData = new JsonObject();
+        jsonData.addProperty("require_pgn", 1);
+        out.println(gson.toJson(jsonData));
+    }
+
     private void receiveData() {
         try {
             while (running) {
@@ -163,6 +169,11 @@ public class GameSocket {
 
                     if (listener != null) {
                         listener.onMoveReceived(moveUCI, canDraw, result);
+                    }
+                } else if (jsonResponse.has("pgn")) {
+                    String pgn = jsonResponse.get("pgn").getAsString();
+                    if (listener != null) {
+                        listener.onPGNReceived(pgn);
                     }
                 } else if (jsonResponse.has("error")) {
                     if (listener != null) {

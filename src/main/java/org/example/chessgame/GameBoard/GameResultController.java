@@ -13,6 +13,8 @@ public class GameResultController extends Controller {
     public Button rematchButton;
     @FXML
     public Button exitToMenuButton;
+    @FXML
+    public Button copyPGNButton;
 
     public void setResult(String result) {
         resultLabel.setText(result);

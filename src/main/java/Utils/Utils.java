@@ -1,9 +1,14 @@
 package Utils;
 
 import javafx.scene.image.*;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 
 public class Utils {
     public static MouseEvent SecondaryMouse = new MouseEvent(
@@ -43,5 +48,17 @@ public class Utils {
         image.fitHeightProperty().bind(cell.heightProperty());
 
         cell.getChildren().setAll(image);
+    }
+
+    // Thêm result vào PGN nếu chưa có
+    public static String addResultToPGN(String pgn, String result) {
+        return pgn.replace("[Result \"*\"]", "[Result \"" + result + "\"]");
+    }
+
+    public static void copyToClipBoard(String str) {
+        // Copy vào clipboard
+        StringSelection selection = new StringSelection(str);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(selection, null);
     }
 }
