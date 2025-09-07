@@ -1,4 +1,4 @@
-package Utils;
+package org.example.chessgame.Utils;
 
 import javafx.scene.image.*;
 import javafx.scene.image.Image;

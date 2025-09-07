@@ -1,20 +1,21 @@
-package Utils;
+package org.example.chessgame.Utils;
 
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class ColorHighlighter {
     private static final double BLEND_FACTOR = 0.5;
 
-    Stack<Color>[][] colorBoard;
+    Deque<Color>[][] colorBoard;
 
     public ColorHighlighter() {
-        colorBoard = new Stack[9][9];
+        colorBoard = new ArrayDeque[9][9];
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                colorBoard[i][j] = new Stack<>();
+                colorBoard[i][j] = new ArrayDeque<>();
             }
         }
     }
@@ -42,25 +43,39 @@ public class ColorHighlighter {
 
     public Color getLastColor(int x, int y) {
         if (colorBoard[x][y].isEmpty()) return null;
-        return colorBoard[x][y].peek();
+        return colorBoard[x][y].getLast();
     }
 
-    public void addColor(Pane pane, int x, int y, Color color) {
+    public void addColorLast(Pane pane, int x, int y, Color color) {
         if (!colorBoard[x][y].isEmpty()) {
             restoreColor(pane, x, y);
         }
 
-        colorBoard[x][y].add(color);
+        colorBoard[x][y].addLast(color);
         highlightColor(pane, x, y, color);
     }
 
-    // Khôi phục màu gốc dựa trên màu đã blend và blendFactor
-    public void popColor(Pane pane, int x, int y) {
-        restoreColor(pane, x, y);
-        colorBoard[x][y].pop();
-        if (!colorBoard[x][y].isEmpty()) {
-            highlightColor(pane, x, y, colorBoard[x][y].peek());
+    public void addColorFirst(Pane pane, int x, int y, Color color) {
+        colorBoard[x][y].addFirst(color);
+        if (colorBoard[x][y].size() == 1) {
+            highlightColor(pane, x, y, color);
         }
+    }
+
+    // Khôi phục màu gốc dựa trên màu đã blend và blendFactor
+    public void popColorLast(Pane pane, int x, int y) {
+        restoreColor(pane, x, y);
+        colorBoard[x][y].removeLast();
+        if (!colorBoard[x][y].isEmpty()) {
+            highlightColor(pane, x, y, colorBoard[x][y].getLast());
+        }
+    }
+
+    public void popColorFirst(Pane pane, int x, int y) {
+        if (colorBoard[x][y].size() == 1) {
+            restoreColor(pane, x, y);
+        }
+        colorBoard[x][y].removeFirst();
     }
 
     // Blend màu vàng/đỏ lên màu nền pane theo blendFactor
@@ -88,7 +103,7 @@ public class ColorHighlighter {
         if (blendFactor >= 1.0) throw new IllegalArgumentException("blendFactor must be < 1");
 
         double r = (blended.getRed()   - blendFactor) / (1 - blendFactor);
-        double g = (blended.getGreen() - (colorBoard[x][y].peek() == Color.YELLOW ? blendFactor : 0)) / (1 - blendFactor);
+        double g = (blended.getGreen() - (colorBoard[x][y].getLast() == Color.YELLOW ? blendFactor : 0)) / (1 - blendFactor);
         double b = blended.getBlue() / (1 - blendFactor);
 
         r = clamp(r);

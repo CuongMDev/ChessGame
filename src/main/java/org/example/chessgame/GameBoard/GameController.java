@@ -1,7 +1,7 @@
 package org.example.chessgame.GameBoard;
 
-import Utils.ColorHighlighter;
-import Utils.Utils;
+import org.example.chessgame.Utils.ColorHighlighter;
+import org.example.chessgame.Utils.Utils;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -30,7 +30,6 @@ import org.example.chessgame.Sound.GameSounds;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -127,8 +126,8 @@ public class GameController extends Controller {
         for (Move move : moveList) {
             moveChessPane(move.endX, move.endY, move.startX, move.startY);
             if (move.specialMove == SpecialMove.NORMAL) { // is move event
-                highlighter.popColor(getPaneFromGridPane(move.endX, move.endY), move.endX, move.endY);
-                highlighter.popColor(getPaneFromGridPane(move.startX, move.startY), move.startX, move.startY);
+                highlighter.popColorLast(getPaneFromGridPane(move.endX, move.endY), move.endX, move.endY);
+                highlighter.popColorLast(getPaneFromGridPane(move.startX, move.startY), move.startX, move.startY);
             }
             if (move.deadPiece != null) {
                 if (move.endX == 0 && move.endY == 0) {
@@ -362,7 +361,7 @@ public class GameController extends Controller {
             chessPanes[i].getChildren().add(promotionPane);
 
             // Các events chuột
-            // Hover vào ảnh -> hiện bàn tay mở
+            // Hover vào ảnh -> hiện bàn tay
             promotionChessImage.setOnMouseEntered(_ -> promotionChessImage.setCursor(Cursor.HAND));
             // Rời chuột khỏi ảnh -> về mặc định
             promotionChessImage.setOnMouseExited(_ -> promotionChessImage.setCursor(Cursor.DEFAULT));
@@ -420,11 +419,11 @@ public class GameController extends Controller {
         }
 
         if (unhighlight) {
-            highlighter.popColor(getPaneFromGridPane(lastMove.startX, lastMove.startY), lastMove.startX, lastMove.startY);
-            highlighter.popColor(getPaneFromGridPane(lastMove.endX, lastMove.endY), lastMove.endX, lastMove.endY);
+            highlighter.popColorLast(getPaneFromGridPane(lastMove.startX, lastMove.startY), lastMove.startX, lastMove.startY);
+            highlighter.popColorLast(getPaneFromGridPane(lastMove.endX, lastMove.endY), lastMove.endX, lastMove.endY);
         } else {
-            highlighter.addColor(getPaneFromGridPane(lastMove.startX, lastMove.startY), lastMove.startX, lastMove.startY, Color.YELLOW);
-            highlighter.addColor(getPaneFromGridPane(lastMove.endX, lastMove.endY), lastMove.endX, lastMove.endY, Color.YELLOW);
+            highlighter.addColorLast(getPaneFromGridPane(lastMove.startX, lastMove.startY), lastMove.startX, lastMove.startY, Color.YELLOW);
+            highlighter.addColorLast(getPaneFromGridPane(lastMove.endX, lastMove.endY), lastMove.endX, lastMove.endY, Color.YELLOW);
         }
     }
 
@@ -444,8 +443,8 @@ public class GameController extends Controller {
         if ((!isPreMove && chessBoard.checkCanMovePiece(startX, startY, endX, endY)) ||
                 (isPreMove && chessBoard.checkCanPreMovePiece(startX, startY, endX, endY))) {
             if (isPreMove) {
-                highlighter.addColor(getPaneFromGridPane(startX, startY), startX, startY, Color.RED);
-                highlighter.addColor(getPaneFromGridPane(endX, endY), endX, endY, Color.RED);
+                highlighter.addColorLast(getPaneFromGridPane(startX, startY), startX, startY, Color.RED);
+                highlighter.addColorLast(getPaneFromGridPane(endX, endY), endX, endY, Color.RED);
             } else {
                 // Highlight yellow
                 highlightLastMoveEvent(true);
@@ -579,13 +578,7 @@ public class GameController extends Controller {
 
                 isPreMove.set(chessBoard.getChessPieceTeam(startCell.get()[0], startCell.get()[1]) != currentTurn);
 
-                if (isPreMove.get()) {
-                    if (highlighter.getLastColor(startCell.get()[0], startCell.get()[1]) != Color.RED) {
-                        highlighter.addColor(containPane.get(), startCell.get()[0], startCell.get()[1], Color.YELLOW);
-                    }
-                } else {
-                    highlighter.addColor(containPane.get(), startCell.get()[0], startCell.get()[1], Color.YELLOW);
-                }
+                highlighter.addColorFirst(containPane.get(), startCell.get()[0], startCell.get()[1], Color.YELLOW);
 
                 if (!ChessBoard.isOutside(currentCell.get()[0], currentCell.get()[1])) {
                     getPaneFromGridPane(currentCell.get()[0], currentCell.get()[1]).getStyleClass().add("highlight-border"); // Thêm viền
@@ -606,13 +599,7 @@ public class GameController extends Controller {
                 image.setTranslateX(0);
                 image.setTranslateY(0);
 
-                if (isPreMove.get()) {
-                    if (highlighter.getLastColor(startCell.get()[0], startCell.get()[1]) == Color.YELLOW) {
-                    highlighter.popColor(containPane.get(), startCell.get()[0], startCell.get()[1]);
-                    }
-                } else {
-                    highlighter.popColor(containPane.get(), startCell.get()[0], startCell.get()[1]);
-                }
+                highlighter.popColorFirst(containPane.get(), startCell.get()[0], startCell.get()[1]);
 
                 overlayPane.getChildren().removeLast(); // Xóa khỏi overlayPane
 
@@ -807,52 +794,34 @@ public class GameController extends Controller {
     }
 
     private void addNumOrder() {
-        final String numLabelStyle = "-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #9e7357;";
+        final String labelStyle = "-fx-font-size: 20px; -fx-font-weight: Bold; -fx-text-fill: #DDDDDD;";
 
         for (int row = 1; row <= 8; row++) {
-            Label numLabel1 = new Label(String.valueOf((char) (teamPerspective == ChessPiece.Team.WHITE ? 'a' + row - 1 : 'a' + 8 - row)));
-            Label numLabel2 = new Label(String.valueOf((char) (teamPerspective == ChessPiece.Team.WHITE ? 'a' + row - 1 : 'a' + 8 - row)));
-            numLabel1.setStyle(numLabelStyle);
-            numLabel2.setStyle(numLabelStyle);
-            VBox vbox1 = new VBox(numLabel1);
-            VBox vbox2 = new VBox(numLabel2);
-            vbox1.setAlignment(Pos.BOTTOM_CENTER);
-            vbox2.setAlignment(Pos.TOP_CENTER);
+            Label numLabel = new Label(String.valueOf((char) (teamPerspective == ChessPiece.Team.WHITE ? 'a' + row - 1 : 'a' + 8 - row)));
+            numLabel.setStyle(labelStyle);
+            VBox vbox = new VBox(numLabel);
+            vbox.setAlignment(Pos.TOP_CENTER);
 
-            Pane pane1 = chessBoardPane[0][row];
-            Pane pane2 = chessBoardPane[9][row];
+            Pane pane = chessBoardPane[9][row];
 
-            vbox1.prefHeightProperty().bind(pane1.heightProperty());
-            vbox1.prefWidthProperty().bind(pane1.widthProperty());
+            vbox.prefHeightProperty().bind(pane.heightProperty());
+            vbox.prefWidthProperty().bind(pane.widthProperty());
 
-            vbox2.prefHeightProperty().bind(pane2.heightProperty());
-            vbox2.prefWidthProperty().bind(pane2.widthProperty());
-
-            pane1.getChildren().setAll(vbox1);
-            pane2.getChildren().setAll(vbox2);
+            pane.getChildren().setAll(vbox);
         }
 
         for (int col = 1; col <= 8; col++) {
-            Label numLabel1 = new Label((teamPerspective == ChessPiece.Team.WHITE ? 9 - col : col - 1) + " ");
-            Label numLabel2 = new Label(" " + (teamPerspective == ChessPiece.Team.WHITE ? 9 - col : col - 1));
-            numLabel1.setStyle(numLabelStyle);
-            numLabel2.setStyle(numLabelStyle);
-            HBox vbox1 = new HBox(numLabel1);
-            HBox vbox2 = new HBox(numLabel2);
-            vbox1.setAlignment(Pos.CENTER_RIGHT);
-            vbox2.setAlignment(Pos.CENTER_LEFT);
+            Label numLabel = new Label((teamPerspective == ChessPiece.Team.WHITE ? 9 - col : col) + " ");
+            numLabel.setStyle(labelStyle);
+            HBox vbox = new HBox(numLabel);
+            vbox.setAlignment(Pos.CENTER_RIGHT);
 
-            Pane pane1 = chessBoardPane[col][0];
-            Pane pane2 = chessBoardPane[col][9];
+            Pane pane = chessBoardPane[col][0];
 
-            vbox1.prefHeightProperty().bind(pane1.heightProperty());
-            vbox1.prefWidthProperty().bind(pane1.widthProperty());
+            vbox.prefHeightProperty().bind(pane.heightProperty());
+            vbox.prefWidthProperty().bind(pane.widthProperty());
 
-            vbox2.prefHeightProperty().bind(pane2.heightProperty());
-            vbox2.prefWidthProperty().bind(pane2.widthProperty());
-
-            pane1.getChildren().setAll(vbox1);
-            pane2.getChildren().setAll(vbox2);
+            pane.getChildren().setAll(vbox);
         }
     }
 

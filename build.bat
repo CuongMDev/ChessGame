@@ -31,7 +31,8 @@ jpackage ^
   --icon "%ICON_PATH%" ^
   --dest "%OUTPUT_DIR%" ^
   --win-shortcut ^
-  --win-menu
+  --win-menu ^
+  --win-dir-chooser
 
 IF %ERRORLEVEL% NEQ 0 (
     echo ❌ Đóng gói thất bại!
