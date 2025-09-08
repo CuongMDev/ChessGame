@@ -10,6 +10,7 @@ public class ColorHighlighter {
     private static final double BLEND_FACTOR = 0.5;
 
     Deque<Color>[][] colorBoard;
+    Color[][] savedFirstColor;
 
     public ColorHighlighter() {
         colorBoard = new ArrayDeque[9][9];
@@ -18,6 +19,8 @@ public class ColorHighlighter {
                 colorBoard[i][j] = new ArrayDeque<>();
             }
         }
+
+        savedFirstColor = new Color[9][9];
     }
 
     // Lấy màu nền hiện tại từ style CSS "-fx-background-color"
@@ -81,6 +84,9 @@ public class ColorHighlighter {
     // Blend màu vàng/đỏ lên màu nền pane theo blendFactor
     private void highlightColor(Pane pane, int x, int y, Color color) {
         Color base = getBackgroundColorFromStyle(pane);
+        if (savedFirstColor[x][y] == null) {
+            savedFirstColor[x][y] = base;
+        }
 
         double r = base.getRed()   * (1 - BLEND_FACTOR) + 1.0 * BLEND_FACTOR;
         double g = base.getGreen() * (1 - BLEND_FACTOR) + (color == Color.YELLOW ? 1 : 0) * BLEND_FACTOR;
@@ -92,32 +98,7 @@ public class ColorHighlighter {
     }
 
     private void restoreColor(Pane pane, int x, int y) {
-        Color blended = getBackgroundColorFromStyle(pane);
-        Color original = calculateOriginalColor(x, y, blended, BLEND_FACTOR);
-
-        setBackgroundColor(pane, original);
-    }
-
-    // Tính màu gốc từ màu blend và blendFactor
-    private Color calculateOriginalColor(int x, int y, Color blended, double blendFactor) {
-        if (blendFactor >= 1.0) throw new IllegalArgumentException("blendFactor must be < 1");
-
-        double r = (blended.getRed()   - blendFactor) / (1 - blendFactor);
-        double g = (blended.getGreen() - (colorBoard[x][y].getLast() == Color.YELLOW ? blendFactor : 0)) / (1 - blendFactor);
-        double b = blended.getBlue() / (1 - blendFactor);
-
-        r = clamp(r);
-        g = clamp(g);
-        b = clamp(b);
-
-        return new Color(r, g, b, blended.getOpacity());
-    }
-
-    // Giới hạn giá trị màu trong khoảng 0..1
-    private double clamp(double val) {
-        if (val < 0) return 0;
-        if (val > 1) return 1;
-        return val;
+        setBackgroundColor(pane, savedFirstColor[x][y]);
     }
 
     // Đặt màu nền cho Pane dưới dạng CSS rgba()
