@@ -1,5 +1,7 @@
 package org.example.chessgame.Utils;
 
+import javafx.geometry.Point2D;
+import javafx.scene.Scene;
 import javafx.scene.image.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
@@ -41,6 +43,11 @@ public class Utils {
         copyImage.setFitWidth(container.getWidth());
         copyImage.setFitHeight(container.getHeight());
         return copyImage;
+    }
+
+    public static Point2D sceneToScene(double x, double y, Pane paneA, Pane paneB) {
+        Point2D pointInScene = paneA.localToScene(x, y);
+        return paneB.sceneToLocal(pointInScene);
     }
 
     public static void setImageToCell(Pane cell, ImageView image) {

@@ -20,7 +20,6 @@
             </HBox>
             <StackPane>
                <children>
-                  <Pane fx:id="overlayPane" prefHeight="605.0" prefWidth="637.0" />
                   <GridPane fx:id="chessBoardBox" prefHeight="605.0" prefWidth="551.0">
                      <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -47,6 +46,7 @@
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                      </rowConstraints>
                   </GridPane>
+                  <Pane fx:id="overlayPane" prefHeight="605.0" prefWidth="637.0" />
                </children>
             </StackPane>
             <VBox alignment="CENTER" prefHeight="617.0" prefWidth="159.0">

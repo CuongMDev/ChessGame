@@ -40,3 +40,4 @@ build/
 
 GameProcess/
 configs/
+app.lock
