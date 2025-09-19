@@ -39,7 +39,7 @@ public class Pawn extends ChessPiece {
         }
 
         // First move: two steps forward
-        if (startX == endX && startY == startRow && endY == startY + 2 * direction) {
+        if (startX == endX && startY == startRow && endY == startY + 2 * direction && !chessBoard.existChessPiece(startX, startY + 2 * direction)) {
             return !chessBoard.existChessPiece(startX, startY + direction);
         }
 
