@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -82,6 +83,13 @@ public class GameController extends Controller {
     private GameSocket gameSocket;
 
     private String current_moveUCI;
+
+    //event
+    AtomicReference<int[]> startCell = new AtomicReference<>();
+    AtomicReference<Pane> containPane = new AtomicReference<>();
+    AtomicReference<int[]> currentCell = new AtomicReference<>();
+    AtomicInteger mouseStage = new AtomicInteger(); // 0: chưa chọn, 1: đang kéo
+    AtomicBoolean needToCancel = new AtomicBoolean();
     ImageView currentChooseImage;
     ImageView currentCopyChooseImage;
 
@@ -93,6 +101,10 @@ public class GameController extends Controller {
     }
 
     private void rollback() {
+        if (currentChooseImage != null) {
+            currentChooseImage.fireEvent(Utils.SecondaryMouse);
+        }
+
         rollbackAndClearAllPreMoves();
         drawButton.setDisable(true);
         do {
@@ -231,13 +243,16 @@ public class GameController extends Controller {
         return false;
     }
 
-    private void emitPlayerEvent(int startX, int startY, int endX, int endY, ChessPiece promotionPiece) {
+    private boolean emitPlayerEvent(int startX, int startY, int endX, int endY, boolean useExtraChessTransition) {
         boolean isPreMove = chessBoard.getChessPieceTeam(startX, startY) != currentTurn;
-        if (playCell(startX, startY, endX, endY, promotionPiece, new boolean[]{false, true})) {
+        if (playCell(startX, startY, endX, endY, null, new boolean[]{useExtraChessTransition, true})) {
             if (isPreMove) {
                 gameSound.premoveSound.play();
             }
+            return true;
         }
+
+        return false;
     }
 
     private void emitBotEvent(String moveUCI, boolean canDraw, String result) {
@@ -361,7 +376,7 @@ public class GameController extends Controller {
     public void continuePreMove() {
         List<PreMove> moves = chessBoard.continueInPreMoveList();
         for (PreMove move : moves) {
-            if ((!chessBoard.existChessPiece(move.startX, move.startY) || chessBoard.getChessPieceTeam(move.startX, move.startY) != playerTurn)
+            if ((!chessBoard.existChessPiece(move.startX, move.startY) /*en passant*/ || chessBoard.getChessPieceTeam(move.startX, move.startY) != playerTurn /*taken*/)
                 || (!playCell(move.startX, move.startY, move.endX, move.endY, move.promotedPiece, new boolean[]{false, false}))) {
 
                 if (currentChooseImage != null) {
@@ -446,10 +461,7 @@ public class GameController extends Controller {
                     gameSocket.sendMoveData(current_moveUCI);
                 }
 
-                // Bỏ phần chọn phong
-                for (Pane chessPane : promotionChessPanes) {
-                    chessPane.getChildren().removeLast();
-                }
+                removePromotionBoard();
             });
         }
     }
@@ -489,8 +501,16 @@ public class GameController extends Controller {
         }
     }
 
+    private boolean checkCanMovePiece(int startX, int startY, int endX, int endY) {
+        boolean isPreMove = chessBoard.getChessPieceTeam(startX, startY) != currentTurn;
+
+        // Check valid move
+        return  ((!isPreMove && chessBoard.checkCanMovePiece(startX, startY, endX, endY)) ||
+                (isPreMove && chessBoard.checkCanPreMovePiece(startX, startY, endX, endY)));
+    }
+
     /**
-     * useChessTransition has for normal move and special move
+     * useChessTransition has for event move and extra move
      * @return if move is valid
      */
     private boolean handleMoveEvent(int startX, int startY, int endX, int endY, ChessPiece promotionPiece, boolean[] useChessTransition) {
@@ -501,9 +521,7 @@ public class GameController extends Controller {
 
         boolean isPreMove = chessBoard.getChessPieceTeam(startX, startY) != currentTurn;
 
-        // Check valid move
-        if ((!isPreMove && chessBoard.checkCanMovePiece(startX, startY, endX, endY)) ||
-                (isPreMove && chessBoard.checkCanPreMovePiece(startX, startY, endX, endY))) {
+        if (checkCanMovePiece(startX, startY, endX, endY)) {
             if (isPreMove) {
                 highlighter.addColorLast(getPaneFromGridPane(startX, startY), startX, startY, Color.RED);
                 highlighter.addColorLast(getPaneFromGridPane(endX, endY), endX, endY, Color.RED);
@@ -590,13 +608,49 @@ public class GameController extends Controller {
         }
     }
 
+    private void removePromotionBoard() {
+        // Bỏ phần chọn phong
+        if (promotionChessPanes != null) {
+            for (Pane chessPane : promotionChessPanes) {
+                chessPane.getChildren().removeLast();
+            }
+            promotionChessPanes = null;
+        }
+    }
+
+    private void cancelPlaying(ImageView originalImage, int type) {
+        if (type == 0) {
+            originalImage.setTranslateX(0);
+            originalImage.setTranslateY(0);
+
+            overlayPane.getChildren().remove(originalImage); // Xóa khỏi overlayPane
+
+            if (containPane.get().getChildren().isEmpty() || containPane.get().getChildren().getFirst() != currentCopyChooseImage) {
+                Pane findContainPane = getPaneFromGridPane(currentCopyChooseImage);
+                if (findContainPane != null) {
+                    findContainPane.getChildren().setAll(originalImage);
+                }
+            } else {
+                containPane.get().getChildren().setAll(originalImage); // Đổi lại image
+            }
+
+            if (!ChessBoard.isOutside(currentCell.get()[0], currentCell.get()[1])) {
+                getPaneFromGridPane(currentCell.get()[0], currentCell.get()[1]).getStyleClass().remove("highlight-border"); // Xoá viền
+            }
+
+            currentCopyChooseImage = null;
+
+            mouseStage.set(0);
+        } else {
+            highlighter.popColorFirst(containPane.get(), startCell.get()[0], startCell.get()[1]);
+
+            currentChooseImage = null;
+        }
+    }
+
     private void addChessPieceEvents(ImageView image) {
         // Tạo event kéo thả
         // Sự kiện nhấn chuột để lưu vị trí bắt đầu
-        AtomicReference<int[]> startCell = new AtomicReference<>();
-        AtomicReference<Pane> containPane = new AtomicReference<>();
-        AtomicReference<int[]> currentCell = new AtomicReference<>();
-        AtomicInteger mouseStage = new AtomicInteger(); // 0: chưa chọn, 1: đang kéo
 
         // Hover vào ảnh -> hiện bàn tay mở
         image.setOnMouseEntered(_ -> image.setCursor(Cursor.OPEN_HAND));
@@ -613,22 +667,38 @@ public class GameController extends Controller {
                 if (mouseStage.get() != 0) { // Không đúng stage
                     return;
                 }
+
                 Point2D localInOverlayPane = overlayPane.sceneToLocal(event.getSceneX(), event.getSceneY());
 
-                // Lưu điểm bắt đầu
-                startCell.set(getCell(localInOverlayPane.getX(), localInOverlayPane.getY()));
-
-                currentCell.set(getCell(localInOverlayPane.getX(), localInOverlayPane.getY()));
-                if (!chessBoard.existChessPiece(currentCell.get()[0], currentCell.get()[1]) || image != chessBoard.getChessPiece(currentCell.get()[0], currentCell.get()[1]).getChessImage()) { // Không trùng ảnh đang chọn
+                int[] newStartCell = getCell(localInOverlayPane.getX(), localInOverlayPane.getY());
+                Pane newContainPane = getPaneFromGridPane(image);
+                // Sửa lỗi ô không khớp vị trí
+                if (!chessBoard.existChessPiece(newStartCell[0], newStartCell[1]) || image != chessBoard.getChessPiece(newStartCell[0], newStartCell[1]).getChessImage()) { // Không trùng ảnh đang chọn
                     return;
                 }
 
+                // Di chuyển hợp lệ thì kích hoạt sự kiện cell
+                if (currentChooseImage != null && checkCanMovePiece(startCell.get()[0], startCell.get()[1], newStartCell[0], newStartCell[1])) {
+                    newContainPane.fireEvent(event);
+                    return;
+                }
                 // Không đúng lượt thì bỏ qua
-                if (!checkValidTurn(startCell.get()[0], startCell.get()[1])) {
+                if (!checkValidTurn(newStartCell[0], newStartCell[1])) {
                     return;
                 }
 
-                containPane.set(getPaneFromGridPane(image));
+                if (currentChooseImage != image) {
+                    needToCancel.set(false);
+                }
+                // Xoá màu ô trước trước khi tô màu ô mới
+                if (currentChooseImage != null) {
+                    cancelPlaying(currentChooseImage, 1);
+                }
+                // Lưu điểm bắt đầu
+                startCell.set(newStartCell);
+                currentCell.set(newStartCell);
+                containPane.set(newContainPane);
+
                 ImageView copyImage = Utils.copyImageView(containPane.get(), image);
                 copyImage.setOpacity(0.3); // Làm mờ
                 containPane.get().getChildren().setAll(copyImage); // Đổi sang copy image
@@ -655,34 +725,12 @@ public class GameController extends Controller {
 
             // Sự kiện huỷ
             if (event.getButton() == MouseButton.SECONDARY) {
-                if (mouseStage.get() != 1) { // Không đúng stage
-                    return;
+                if (currentCopyChooseImage != null) {
+                    cancelPlaying(image, 0);
                 }
-
-                image.setTranslateX(0);
-                image.setTranslateY(0);
-
-                highlighter.popColorFirst(containPane.get(), startCell.get()[0], startCell.get()[1]);
-
-                overlayPane.getChildren().remove(image); // Xóa khỏi overlayPane
-
-                if (containPane.get().getChildren().isEmpty() || containPane.get().getChildren().getFirst() != currentCopyChooseImage) {
-                    Pane findContainPane = getPaneFromGridPane(currentCopyChooseImage);
-                    if (findContainPane != null) {
-                        findContainPane.getChildren().setAll(image);
-                    }
-                } else {
-                    containPane.get().getChildren().setAll(image); // Đổi lại image
+                if (currentChooseImage != null) {
+                    cancelPlaying(image, 1);
                 }
-
-                currentChooseImage = null;
-                currentCopyChooseImage = null;
-
-                if (!ChessBoard.isOutside(currentCell.get()[0], currentCell.get()[1])) {
-                    getPaneFromGridPane(currentCell.get()[0], currentCell.get()[1]).getStyleClass().remove("highlight-border"); // Xoá viền
-                }
-
-                mouseStage.set(0);
             }
         });
 
@@ -720,25 +768,52 @@ public class GameController extends Controller {
             if (mouseStage.get() != 1) { // Không đúng stage
                 return;
             }
-            image.fireEvent(Utils.SecondaryMouse); // Huỷ
 
             Point2D localInOverlayPane = overlayPane.sceneToLocal(event.getSceneX(), event.getSceneY());
             int[] endCell = getCell(localInOverlayPane.getX(), localInOverlayPane.getY());
 
+            cancelPlaying(image, 0);
+            if (Arrays.equals(startCell.get(), endCell)) {
+                if (needToCancel.get()) {
+                    cancelPlaying(image, 1);
+                    needToCancel.set(false);
+                } else {
+                    needToCancel.set(true);
+                }
+            }
+
             // Kích hoạt sự kiện
-            emitPlayerEvent(startCell.get()[0], startCell.get()[1], endCell[0], endCell[1], null);
+            if (emitPlayerEvent(startCell.get()[0], startCell.get()[1], endCell[0], endCell[1], false)) {
+                cancelPlaying(image, 1);
+                needToCancel.set(false);
+            }
+        });
+    }
+
+    private void addCellEvents(Pane pane) {
+        // Sự kiện bấm chuột
+        pane.setOnMousePressed(event -> {
+            // Sự kiện chọn
+            if (event.getButton() == MouseButton.PRIMARY) {
+                if (mouseStage.get() != 0) { // Không đúng stage
+                    return;
+                }
+
+                if (currentChooseImage != null) {
+                    cancelPlaying(currentChooseImage, 1);
+
+                    Point2D endPointInOverlayPane = overlayPane.sceneToLocal(event.getSceneX(), event.getSceneY());
+                    int[] endCell = getCell(endPointInOverlayPane.getX(), endPointInOverlayPane.getY());
+                    // Kích hoạt sự kiện
+                    emitPlayerEvent(startCell.get()[0], startCell.get()[1], endCell[0], endCell[1], true);
+                }
+            }
         });
     }
 
     @Override
     public void refresh() {
-        // Bỏ phần chọn phong
-        if (promotionChessPanes != null) {
-            for (Pane chessPane : promotionChessPanes) {
-                chessPane.getChildren().removeLast();
-            }
-            promotionChessPanes = null;
-        }
+        removePromotionBoard();
 
         for (Node node : chessBoardBox.getChildren()) {
             int x = GridPane.getColumnIndex(node);
@@ -776,6 +851,9 @@ public class GameController extends Controller {
             if (event.getButton() == MouseButton.SECONDARY) {
                 rollbackAllPreMoves();
                 chessBoard.continueInPreMoveList();
+                if (currentChooseImage != null) {
+                    currentChooseImage.fireEvent(Utils.SecondaryMouse);
+                }
             }
         });
 
@@ -812,6 +890,8 @@ public class GameController extends Controller {
                     } else {
                         cell.setStyle("-fx-background-color: #769656;");
                     }
+
+                    addCellEvents(cell);
                 }
 
                 chessBoardBox.add(cell, col, row);
@@ -915,8 +995,11 @@ public class GameController extends Controller {
         });
 
         gameResultController = (GameResultController) Controller.init(getStage(), getClass().getResource("GameResult/GameResult.fxml"));
-        mainStackPane.getChildren().add(gameResultController.getParent()); // avoid lagging
+
+        // avoid lagging
+        mainStackPane.getChildren().add(gameResultController.getParent());
         mainStackPane.getChildren().removeLast();
+
         gameResultController.rematchButton.setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getButton() == MouseButton.PRIMARY) {
                 mainStackPane.getChildren().removeLast();
