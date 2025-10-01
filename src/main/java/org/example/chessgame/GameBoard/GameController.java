@@ -69,7 +69,7 @@ public class GameController extends Controller {
     private String save_result;
 
     // move transition
-    private Stack<TranslateTransition> saveTransition;
+    private Stack<ChessTransition> saveTransition;
 
     // promotion
     boolean isPromoting;
@@ -159,7 +159,7 @@ public class GameController extends Controller {
                 }
             }
         }
-        if (isPromoting) {
+        if (!moveList.isEmpty() && isPromoting) { // is promoting and not premove
             refresh();
             isPromoting = false;
         }
@@ -168,10 +168,6 @@ public class GameController extends Controller {
     private void rollbackAndClearAllPreMoves() {
         rollbackAllPreMoves();
         chessBoard.continueInPreMoveList();
-        if (isPromoting) {
-            isPromoting = false;
-            refresh();
-        }
     }
 
     @FXML
@@ -232,9 +228,6 @@ public class GameController extends Controller {
             }
             if (isPreMove && promotionPiece != null) {
                 chessBoard.getLastPreMove(0).promotedPiece = promotionPiece;
-            }
-            if (isPreMove) {
-                gameSound.premoveSound.play();
             }
 
             return true;
@@ -352,24 +345,23 @@ public class GameController extends Controller {
         chessImage.setOpacity(0);
 
         // create move animation
-        TranslateTransition chessTransition = new TranslateTransition(Duration.millis(100), copyChessImage);
-        chessTransition.setToX(endPointInOverlayPane.getX());
-        chessTransition.setToY(endPointInOverlayPane.getY());
-        chessTransition.setOnFinished(e -> {
+        ChessTransition chessTransition = new ChessTransition(copyChessImage, endPointInOverlayPane.getX(), endPointInOverlayPane.getY(), 100);
+        chessTransition.setOnFinished(() -> {
             saveTransition.remove(chessTransition);
             overlayPane.getChildren().remove(copyChessImage);
             copyChessImage.setTranslateX(0);
             copyChessImage.setTranslateY(0);
             chessImage.setOpacity(1);
         });
+
         saveTransition.add(chessTransition);
-        chessTransition.play();
+        chessTransition.start();
     }
 
     private void stopAllTransitions() {
         while (!saveTransition.isEmpty()) {
-            TranslateTransition lastTransition = saveTransition.removeLast();
-            lastTransition.jumpTo(lastTransition.getTotalDuration());
+            ChessTransition lastTransition = saveTransition.removeLast();
+            lastTransition.stop();
         }
     }
 
@@ -392,6 +384,10 @@ public class GameController extends Controller {
         save_result = result;
         gameOver = true;
         rollbackAndClearAllPreMoves();
+        if (isPromoting) {
+            isPromoting = false;
+            refresh();
+        }
         rollbackButton.setDisable(true);
         resignButton.setDisable(true);
         if (currentChooseImage != null) {
@@ -854,6 +850,9 @@ public class GameController extends Controller {
                 if (currentChooseImage != null) {
                     currentChooseImage.fireEvent(Utils.SecondaryMouse);
                 }
+                if (isPromoting) {
+                    Platform.runLater(this::rollback);
+                }
             }
         });
 
@@ -898,8 +897,6 @@ public class GameController extends Controller {
                 chessBoardPane[row][col] = cell;
             }
         }
-
-        addNumOrder();
     }
 
     public void resetGameBoard(boolean playWithBot, String fen) {
@@ -927,6 +924,7 @@ public class GameController extends Controller {
         }
 
         teamPerspective = ChessPiece.Team.WHITE;
+        addNumOrder();
         refresh();
     }
 
@@ -934,6 +932,7 @@ public class GameController extends Controller {
         this.playWithBot = playWithBot;
         this.playerTurn = humanTeam;
         this.teamPerspective = teamPerspective;
+        addNumOrder();
         if (teamPerspective == ChessPiece.Team.BLACK) {
             refresh();
         }

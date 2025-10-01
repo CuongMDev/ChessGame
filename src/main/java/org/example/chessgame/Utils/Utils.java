@@ -1,7 +1,6 @@
 package org.example.chessgame.Utils;
 
 import javafx.geometry.Point2D;
-import javafx.scene.Scene;
 import javafx.scene.image.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
