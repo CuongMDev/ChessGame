@@ -150,6 +150,12 @@ public class GameSocket {
         out.println(gson.toJson(jsonData));
     }
 
+    public void sendCancelSearching() {
+        JsonObject jsonData = new JsonObject();
+        jsonData.addProperty("cancel_searching", 1);
+        out.println(gson.toJson(jsonData));
+    }
+
     private void receiveData() {
         try {
             while (running) {

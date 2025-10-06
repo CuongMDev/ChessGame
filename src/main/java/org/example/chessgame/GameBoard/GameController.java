@@ -381,6 +381,8 @@ public class GameController extends Controller {
     }
 
     private void onGameOver(String result) {
+        gameSocket.sendCancelSearching();
+
         save_result = result;
         gameOver = true;
         rollbackAndClearAllPreMoves();
