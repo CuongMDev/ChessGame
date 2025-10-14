@@ -1,9 +1,12 @@
 package org.example.chessgame.ChessObject;
 
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.beans.binding.DoubleBinding;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import org.girod.javafx.svgimage.SVGImage;
+import org.girod.javafx.svgimage.SVGLoader;
 
-import java.util.Objects;
+import java.net.URL;
 import java.util.Random;
 
 public abstract class ChessPiece {
@@ -11,23 +14,27 @@ public abstract class ChessPiece {
         WHITE, BLACK
     }
 
+    private final static int CHESS_WIDTH = 33;
+    private final static double CHESS_SIZE_RATIO = 0.75;
+
     private final Team team;
     private final Random randSkin = new Random();
     private static final String[] teamString = {"white", "black"};
     private static final String chessImagePath = "images/";
     private int moveNumber;
 
-    ImageView chessImage;
+    StackPane chessImage;
 
     public abstract int getSkinCount();
 
     protected void createChessImage(String imageName) {
         int skinType = randSkin.nextInt(getSkinCount());
-        String path = String.format("%s%s-%s_%d.png", chessImagePath, teamString[getTeam().ordinal()], imageName, skinType);
+        String path = String.format("%s%s-%s_%d.svg", chessImagePath, teamString[getTeam().ordinal()], imageName, skinType);
+        URL url = getClass().getResource(path);
 
-        Image image = new Image(Objects.requireNonNull(getClass().getResourceAsStream(path))); // Đường dẫn ảnh
-        chessImage = new ImageView(image);
-        chessImage.setPreserveRatio(true); // Giữ tỷ lệ ảnh
+        SVGImage svgImage = SVGLoader.load(url);
+        chessImage = createSVGWrapper(svgImage);
+
         chessImage.setPickOnBounds(true); // Nhận cả phần rìa
     }
 
@@ -39,8 +46,30 @@ public abstract class ChessPiece {
         return team;
     }
 
-    public ImageView getChessImage() {
+    public StackPane getChessImage() {
         return chessImage;
+    }
+
+    public static StackPane createCopyImage(StackPane chessImage, Pane container) {
+        SVGImage copySVG = SVGLoader.load(((SVGImage)chessImage.getChildren().getFirst()).getSVGContent().url);
+        StackPane wrapper = createSVGWrapper(copySVG);
+
+        wrapper.prefWidthProperty().bind(container.widthProperty());
+        wrapper.prefHeightProperty().bind(container.heightProperty());
+
+        return wrapper;
+    }
+
+    private static StackPane createSVGWrapper(SVGImage svgImage) {
+        StackPane wrapper = new StackPane();
+        DoubleBinding binding = wrapper.widthProperty().divide(CHESS_WIDTH).multiply(CHESS_SIZE_RATIO);
+
+        svgImage.scaleXProperty().bind(binding);
+        svgImage.scaleYProperty().bind(binding);
+
+        wrapper.getChildren().add(svgImage);
+
+        return wrapper;
     }
 
     public void changeMoveNumber(int value) {

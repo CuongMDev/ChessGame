@@ -1,6 +1,5 @@
 package org.example.chessgame.GameBoard;
 
-import javafx.animation.TranslateTransition;
 import org.example.chessgame.Utils.ColorHighlighter;
 import org.example.chessgame.Utils.Utils;
 import javafx.animation.PauseTransition;
@@ -14,7 +13,6 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -78,7 +76,7 @@ public class GameController extends Controller {
     ChessBoard chessBoard;
     ColorHighlighter highlighter;
 
-    ImageView saveChessImage;
+    StackPane saveChessImage;
 
     private GameSocket gameSocket;
 
@@ -90,8 +88,8 @@ public class GameController extends Controller {
     AtomicReference<int[]> currentCell = new AtomicReference<>();
     AtomicInteger mouseStage = new AtomicInteger(); // 0: chưa chọn, 1: đang kéo
     AtomicBoolean needToCancel = new AtomicBoolean();
-    ImageView currentChooseImage;
-    ImageView currentCopyChooseImage;
+    StackPane currentChooseImage;
+    StackPane currentCopyChooseImage;
 
     @FXML
     private void onRollbackClicked(MouseEvent mouseEvent) {
@@ -277,7 +275,7 @@ public class GameController extends Controller {
             }
             handleMoveEvent(startX, startY, endX, endY, promotionPiece, new boolean[]{true, true});
         }
-        
+
         drawButton.setDisable(playerTurn != currentTurn || !canDraw);
 
         switch (result) {
@@ -292,10 +290,10 @@ public class GameController extends Controller {
         return teamPerspective == ChessPiece.Team.WHITE ? chessBoardPane[row][column] : chessBoardPane[9 - row][9 - column];
     }
 
-    private Pane getPaneFromGridPane(ImageView imageView) {
+    private Pane getPaneFromGridPane(StackPane image) {
         for (Node node : chessBoardBox.getChildren()) {
             Pane getPane = (Pane) node;
-            if (getPane.getChildren().contains(imageView)) {
+            if (getPane.getChildren().contains(image)) {
                 return getPane;
             }
         }
@@ -316,13 +314,13 @@ public class GameController extends Controller {
             startPane.getChildren().add(saveChessImage);
         }
         if (endX == 0 && endY == 0) {
-            saveChessImage = (ImageView) startPane.getChildren().removeLast();
+            saveChessImage = (StackPane) startPane.getChildren().removeLast();
             return;
         }
 
         Pane endPane = getPaneFromGridPane(endX, endY);
 
-        ImageView chessImage = (ImageView) startPane.getChildren().removeLast();
+        StackPane chessImage = (StackPane) startPane.getChildren().removeLast();
         endPane.getChildren().setAll(chessImage);
 
         if (useChessTransition) {
@@ -330,8 +328,8 @@ public class GameController extends Controller {
         }
     }
 
-    public void addChessTransition(ImageView chessImage, Pane startPane, Pane endPane) {
-        ImageView copyChessImage = Utils.copyImageView(endPane, chessImage);
+    public void addChessTransition(StackPane chessImage, Pane startPane, Pane endPane) {
+        StackPane copyChessImage = ChessPiece.createCopyImage(chessImage, endPane);
 
         double imageX = copyChessImage.getLayoutX();
         double imageY = copyChessImage.getLayoutY();
@@ -369,7 +367,7 @@ public class GameController extends Controller {
         List<PreMove> moves = chessBoard.continueInPreMoveList();
         for (PreMove move : moves) {
             if ((!chessBoard.existChessPiece(move.startX, move.startY) /*en passant*/ || chessBoard.getChessPieceTeam(move.startX, move.startY) != playerTurn /*taken*/)
-                || (!playCell(move.startX, move.startY, move.endX, move.endY, move.promotedPiece, new boolean[]{false, false}))) {
+                    || (!playCell(move.startX, move.startY, move.endX, move.endY, move.promotedPiece, new boolean[]{false, false}))) {
 
                 if (currentChooseImage != null) {
                     currentChooseImage.fireEvent(Utils.SecondaryMouse); // Thả
@@ -392,6 +390,7 @@ public class GameController extends Controller {
         }
         rollbackButton.setDisable(true);
         resignButton.setDisable(true);
+        drawButton.setDisable(true);
         if (currentChooseImage != null) {
             currentChooseImage.fireEvent(Utils.SecondaryMouse); // Thả
         }
@@ -423,7 +422,7 @@ public class GameController extends Controller {
             Pane promotionPane = new Pane();
             promotionPane.setStyle(
                     "-fx-background-color: white;" +
-                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0.5, 3, 3);"
+                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0.5, 3, 3);"
             );
 
             promotionPane.prefWidthProperty().bind(promotionChessPanes.get(i).widthProperty());
@@ -431,7 +430,7 @@ public class GameController extends Controller {
 
             ChessPiece promotionPiece = promotionPieces[i];
             char promotionChar = promotionChars[i];
-            ImageView promotionChessImage = promotionPiece.getChessImage();
+            StackPane promotionChessImage = promotionPiece.getChessImage();
             Utils.setImageToCell(promotionPane, promotionChessImage);
             promotionChessPanes.get(i).getChildren().add(promotionPane);
 
@@ -465,7 +464,7 @@ public class GameController extends Controller {
     }
 
     private void setPromotionPiece(int x, int y, ChessPiece promotionPiece) {
-        ImageView promotionChessImage = promotionPiece.getChessImage();
+        StackPane promotionChessImage = promotionPiece.getChessImage();
 
         moveChessPane(x, y, 0, 0, false); // Save
         if (promotionChessImage == currentChooseImage) {
@@ -616,7 +615,7 @@ public class GameController extends Controller {
         }
     }
 
-    private void cancelPlaying(ImageView originalImage, int type) {
+    private void cancelPlaying(StackPane originalImage, int type) {
         if (type == 0) {
             originalImage.setTranslateX(0);
             originalImage.setTranslateY(0);
@@ -646,7 +645,7 @@ public class GameController extends Controller {
         }
     }
 
-    private void addChessPieceEvents(ImageView image) {
+    private void addChessPieceEvents(StackPane image) {
         // Tạo event kéo thả
         // Sự kiện nhấn chuột để lưu vị trí bắt đầu
 
@@ -697,7 +696,8 @@ public class GameController extends Controller {
                 currentCell.set(newStartCell);
                 containPane.set(newContainPane);
 
-                ImageView copyImage = Utils.copyImageView(containPane.get(), image);
+                StackPane copyImage = ChessPiece.createCopyImage(image, containPane.get());
+
                 copyImage.setOpacity(0.3); // Làm mờ
                 containPane.get().getChildren().setAll(copyImage); // Đổi sang copy image
 
@@ -715,8 +715,8 @@ public class GameController extends Controller {
                     getPaneFromGridPane(currentCell.get()[0], currentCell.get()[1]).getStyleClass().add("highlight-border"); // Thêm viền
                 }
 
-                image.setTranslateX(localInOverlayPane.getX() - image.getFitWidth() / 2);
-                image.setTranslateY(localInOverlayPane.getY() - image.getFitHeight() / 2);
+                image.setTranslateX(localInOverlayPane.getX() - image.getPrefWidth() / 2);
+                image.setTranslateY(localInOverlayPane.getY() - image.getPrefHeight() / 2);
 
                 mouseStage.set(1);
             }
@@ -743,8 +743,8 @@ public class GameController extends Controller {
             }
 
             Point2D localInOverlayPane = overlayPane.sceneToLocal(event.getSceneX(), event.getSceneY());
-            image.setTranslateX(localInOverlayPane.getX() - image.getFitWidth() / 2);
-            image.setTranslateY(localInOverlayPane.getY() - image.getFitHeight() / 2);
+            image.setTranslateX(localInOverlayPane.getX() - image.getPrefWidth() / 2);
+            image.setTranslateY(localInOverlayPane.getY() - image.getPrefHeight() / 2);
 
             int[] curCell = getCell(localInOverlayPane.getX(), localInOverlayPane.getY());
             if (!Arrays.equals(currentCell.get(), curCell)) {
@@ -802,6 +802,10 @@ public class GameController extends Controller {
 
                     Point2D endPointInOverlayPane = overlayPane.sceneToLocal(event.getSceneX(), event.getSceneY());
                     int[] endCell = getCell(endPointInOverlayPane.getX(), endPointInOverlayPane.getY());
+                    // Sửa lỗi ô không khớp vị trí
+                    if (pane != getPaneFromGridPane(endCell[0], endCell[1])) { // Không trùng ô đang chọn
+                        return;
+                    }
                     // Kích hoạt sự kiện
                     emitPlayerEvent(startCell.get()[0], startCell.get()[1], endCell[0], endCell[1], true);
                 }
@@ -823,7 +827,7 @@ public class GameController extends Controller {
             Pane cell = (Pane) node;
             ChessPiece chessPiece = (teamPerspective == ChessPiece.Team.WHITE) ? chessBoard.getChessPiece(x, y) : chessBoard.getChessPiece(9 - x, 9 - y);
             if (chessPiece != null) {
-                ImageView chessImage = chessPiece.getChessImage();
+                StackPane chessImage = chessPiece.getChessImage();
 
                 Utils.setImageToCell(cell, chessImage);
 

@@ -5,7 +5,7 @@ module org.example.chessgame {
     requires javafx.media;
     requires com.google.gson;
     requires com.jfoenix;
-
+    requires org.girod.javafx.svgimage;
 
     opens org.example.chessgame to javafx.fxml;
     exports org.example.chessgame;

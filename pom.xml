@@ -28,6 +28,13 @@
       <version>22</version>
     </dependency>
     <dependency>
+      <groupId>org.girod.javafx</groupId>
+      <artifactId>fxsvgImage</artifactId>
+      <version>1.4</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/jars/fxsvgImage1.4.jar</systemPath>
+    </dependency>
+    <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
       <version>17.0.6</version>
