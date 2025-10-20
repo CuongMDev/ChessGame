@@ -27,7 +27,7 @@ public class GameSocket {
         String mode = System.getProperty("mode", "release");
         if ("debug".equalsIgnoreCase(mode)) {
             processBuilder = new ProcessBuilder("python", "-m", "Play.game_socket");
-            processBuilder.directory(new File("C:\\Users\\mcuon\\PycharmProjects\\ChessProject\\"));
+            processBuilder.directory(new File("C:\\Users\\mcuon\\PycharmProjects\\ChessAI\\"));
         }
         else {
             Path currentDir = Paths.get(System.getProperty("user.dir"));

@@ -1,6 +1,7 @@
 package org.example.chessgame;
 
 import javafx.application.Application;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.example.chessgame.Abstract.Controller;
 import org.example.chessgame.Menu.MenuController;
@@ -22,6 +23,7 @@ public class Main extends Application {
     public void start(Stage stage) throws IOException {
         menuController = (MenuController) Controller.init(stage, getClass().getResource("Menu/Menu.fxml"));
         stage.setTitle("Chess!");
+        stage.getIcons().add(new Image("file:icon.png"));
         stage.setScene(menuController.getParent().getScene());
         stage.setResizable(false);
         stage.show();
@@ -65,7 +67,7 @@ public class Main extends Application {
     public static void main(String[] args) {
         if (!lockInstance("app.lock")) {
             System.out.println("Ứng dụng đã chạy rồi, không thể mở thêm!");
-            return;
+            System.exit(0);
         }
         launch();
     }
